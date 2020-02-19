@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: horizontal-deployment
+  name: horizontal-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: horizontal-deployment
+  template:
+    metadata:
+      labels:
+        run: horizontal-deployment
+    spec:
+      containers:
+      - image: k8s.gcr.io/hpa-example
+        imagePullPolicy: Always
+        name: horizontal-deployment
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: horizontal-deployment
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: horizontal-deployment
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: horizontal-autoscaler
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: horizontal-deployment
+  minReplicas: 1
+  maxReplicas: 12
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50

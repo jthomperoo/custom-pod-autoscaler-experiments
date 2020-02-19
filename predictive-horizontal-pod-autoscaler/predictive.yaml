@@ -1,0 +1,122 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: predictive-autoscaler
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  - replicationcontrollers/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - deployments/scale
+  - replicasets
+  - replicasets/scale
+  - statefulsets
+  - statefulsets/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: custompodautoscaler.com/v1alpha1
+kind: CustomPodAutoscaler
+metadata:
+  name: predictive-autoscaler
+spec:
+  template:
+    spec:
+      containers:
+      - name: predictive-autoscaler
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:v0.3.0
+        imagePullPolicy: IfNotPresent
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: predictive-deployment
+  config: 
+    - name: minReplicas
+      value: "1"
+    - name: maxReplicas
+      value: "12"
+    - name: metrics
+      value: |
+        - type: Resource
+          resource:
+            name: cpu
+            target:
+              type: Utilization
+              averageUtilization: 50
+    - name: predictiveConfig
+      value: |
+        models:
+        - type: HoltWinters
+          name: HoltWintersPrediction
+          perInterval: 1
+          holtWinters:
+            alpha: 0.9
+            beta: 0.9
+            gamma: 0.9
+            seasonLength: 10
+            storedSeasons: 4
+            method: "additive"
+        decisionType: "maximum"
+    - name: interval
+      value: "30000"
+    - name: startTime
+      value: "1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: predictive-deployment
+  name: predictive-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: predictive-deployment
+  template:
+    metadata:
+      labels:
+        run: predictive-deployment
+    spec:
+      containers:
+      - image: k8s.gcr.io/hpa-example
+        imagePullPolicy: Always
+        name: predictive-deployment
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: predictive-deployment
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: predictive-deployment
+  sessionAffinity: None
+  type: ClusterIP
