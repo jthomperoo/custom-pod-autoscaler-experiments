@@ -1,0 +1,169 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: experiment-deployment
+  name: experiment-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: experiment-deployment
+  template:
+    metadata:
+      labels:
+        run: experiment-deployment
+    spec:
+      containers:
+      - image: k8s.gcr.io/hpa-example
+        imagePullPolicy: Always
+        name: experiment-deployment
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: experiment-deployment
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: experiment-deployment
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: experiment-role
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - '*'
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: experiment-account
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: experiment-role-binding
+subjects:
+- kind: ServiceAccount
+  name: experiment-account
+  namespace: "default"
+roleRef:
+  kind: ClusterRole
+  name: experiment-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: load-test
+  name: load-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: load-test
+  template:
+    metadata:
+      labels:
+        run: load-test
+    spec:
+      serviceAccountName: experiment-account
+      containers:
+      - image: load-test:latest
+        imagePullPolicy: Always
+        name: load-test
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: experiment-autoscaler
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  - replicationcontrollers/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - deployments/scale
+  - replicasets
+  - replicasets/scale
+  - statefulsets
+  - statefulsets/scale
+  verbs:
+  - '*'
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: custompodautoscaler.com/v1alpha1
+kind: CustomPodAutoscaler
+metadata:
+  name: experiment-autoscaler
+spec:
+  template:
+    spec:
+      containers:
+      - name: predictive-autoscaler
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:v0.4.0
+        imagePullPolicy: Always
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: experiment-deployment
+  config: 
+    - name: minReplicas
+      value: "1"
+    - name: maxReplicas
+      value: "20"
+    - name: predictiveConfig
+      value: |
+        models:
+        - type: HoltWinters
+          name: HoltWintersPrediction
+          perInterval: 1
+          holtWinters:
+            alpha: 0.9
+            beta: 0.9
+            gamma: 0.9
+            seasonLength: 288
+            storedSeasons: 4
+            method: "additive"
+        metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 50
+        decisionType: "maximum"

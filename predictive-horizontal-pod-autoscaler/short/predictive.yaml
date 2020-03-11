@@ -49,14 +49,6 @@ spec:
       value: "1"
     - name: maxReplicas
       value: "12"
-    - name: metrics
-      value: |
-        - type: Resource
-          resource:
-            name: cpu
-            target:
-              type: Utilization
-              averageUtilization: 50
     - name: predictiveConfig
       value: |
         models:
@@ -70,6 +62,13 @@ spec:
             seasonLength: 10
             storedSeasons: 4
             method: "additive"
+        metrics:
+          - type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 50
         decisionType: "maximum"
     - name: interval
       value: "30000"

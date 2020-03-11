@@ -1,0 +1,3 @@
+locustio==0.13.5
+invokust==0.61
+kubernetes==10.0.1
