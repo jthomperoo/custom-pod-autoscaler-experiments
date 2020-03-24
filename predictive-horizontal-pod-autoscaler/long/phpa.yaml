@@ -91,7 +91,7 @@ spec:
     spec:
       serviceAccountName: experiment-account
       containers:
-      - image: load-test:latest
+      - image: 178201863210.dkr.ecr.eu-west-2.amazonaws.com/load-test:latest
         imagePullPolicy: Always
         name: load-test
 ---
@@ -135,7 +135,7 @@ spec:
     spec:
       containers:
       - name: predictive-autoscaler
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:v0.4.0
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:v0.5.0
         imagePullPolicy: Always
   scaleTargetRef:
     apiVersion: apps/v1
@@ -153,10 +153,10 @@ spec:
           name: HoltWintersPrediction
           perInterval: 1
           holtWinters:
-            alpha: 0.9
-            beta: 0.9
+            alpha: 0.1
+            beta: 0.1
             gamma: 0.9
-            seasonLength: 288
+            seasonLength: 5760
             storedSeasons: 4
             method: "additive"
         metrics:

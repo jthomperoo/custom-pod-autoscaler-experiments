@@ -3,3 +3,4 @@ tex2pdf*/
 __pycache__/
 .python-version
 results.json
+*.csv

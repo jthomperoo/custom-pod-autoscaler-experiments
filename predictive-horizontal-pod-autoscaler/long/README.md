@@ -2,63 +2,6 @@
 
 This experiment is designed to compare the Predictive Horizontal Pod Autoscaler (PHPA) with the Standard Kubernetes Horizontal Pod Autoscaler (HPA) for autoscaling based on regular, seasonal loads; over a long period (in this case a week).  
 
-## Hypothesis
-
-The Predictive Horizontal Pod Autoscaler using the Holt-Winters prediction method will pre-emptively scale, reacting earlier than the standard Kubernetes Horizontal Pod Autoscaler. This will be manifested in higher replica counts when scaling up, and scaling up earlier; with the result of lower average and maximum latency, and less failed requests - primarily around the moment of change from lower load levels to high load. This effect will only be apparant however after at least one full season (24 hours); for the first season as the predictor won't have data to make a prediction it will be largely the same performance as the standard Kubernetes Horizontal Pod Autoscaler.
-
-## Experiment
-
-This experiment will run for a week - 7 days - and is designed to have the PHPA and HPA running in their own clusters. Everything should be kept the same between the two autoscalers - they will both manage the same application, and the load will be managed by the same load testing logic.  
-
-Each test will have have three elements, the autoscaler, an application to manage, and the load testing applications. The autoscaler will be the only part that changes. The application will be a simple example web server that responds `OK!` to `GET` at path `/`; it is the `k8s.gcr.io/hpa-example` that is used in Kubernetes autoscaling walkthroughs. The load testing application will be a python script that will invoke Locust load testing at set intervals, varying the load applied based on the time of day. The load testing will also periodically record how many replicas the deployment has.  
-
-See these diagrams for overviews of the test:
-
-![Predictive Horizontal Pod Autoscaler Experiment](diagrams/PHPA_long_experiment_phpa_design.svg)  
-**Predictive Horizontal Pod Autoscaler Experiment**
-
-![K8s Horizontal Pod Autoscaler Experiment](diagrams/PHPA_long_experiment_k8s_hpa_design.svg)  
-**K8s Horizontal Pod Autoscaler Experiment**
-
-The load applied will be the same for each autoscaler;
-- High load (300 users) will be applied between 15:00 and 17:00.
-- Medium load (150 users) will be applied between 9:00 and 12:00.
-- Low load (75 users) will be applied for all other times.
-
-The Horizontal Pod Autoscaler will be configured with the following options:
-- Minimum replicas: `1`.
-- Maximum replicas: `20`.
-- Sync Period (`--horizontal-pod-autoscaler-sync-period`): `15s` (default).
-- Downscale Stabilization (`--horizontal-pod-autoscaler-downscale-stabilization`): `5m` (default).
-- Tolerance (`--horizontal-pod-autoscaler-tolerance`): `0.1` (default).
-- CPU Initialization Period (`--horizontal-pod-autoscaler-cpu-initialization-period`): `5m` (default).
-- Initial Readiness Delay (`--horizontal-pod-autoscaler-initial-readiness-delay`): `30s` (default).
-- Metrics: Resource metric targeting CPU usage, with average utilization at `50`.
-
-The Predictive Horizontal Pod Autoscaler will have the same settings as the Horizontal Pod Autoscaler:
-- Minimum replicas: `1`.
-- Maximum replicas: `20`.
-- Sync Period (`--horizontal-pod-autoscaler-sync-period`): `15` (equivalent to `15s`) (default).
-- Downscale Stabilization (`--horizontal-pod-autoscaler-downscale-stabilization`): `300` (equivalent to `5m`) (default).
-- Tolerance (`--horizontal-pod-autoscaler-tolerance`): `0.1` (default).
-- CPU Initialization Period (`--horizontal-pod-autoscaler-cpu-initialization-period`): `300` (equivalent to `5m`) (default).
-- Initial Readiness Delay (`--horizontal-pod-autoscaler-initial-readiness-delay`): `30` (equivalent to `30s`) (default).
-- Metrics: Resource metric targeting CPU usage, with average utilization at `50`.
-
-The Predictive Horizontal Pod Autoscaler will also have the following configuration settings for tuning the Holt-Winters algorithm:
-- Model Holt-Winters
-  * Per Interval: `1` (Run every interval)
-  * Alpha: `0.9`
-  * Beta: `0.9`
-  * Gamma: `0.9`
-  * Season Length: `288` (24 hours in 5 minute intervals)
-  * Stored Seasons: `4` (store last 4 days data)
-  * Method: `additive`
-
-## Results
-
-## Conclusion
-
 ## Running the experiment
 
 ### Environment

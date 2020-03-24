@@ -91,7 +91,7 @@ spec:
     spec:
       serviceAccountName: experiment-account
       containers:
-      - image: load-test:latest
+      - image: 178201863210.dkr.ecr.eu-west-2.amazonaws.com/load-test:latest
         imagePullPolicy: Always
         name: load-test
 ---
