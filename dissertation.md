@@ -515,14 +515,7 @@ changes in request numbers to the application, and how the replica count is
 predictable and repeatable daily.  
 
 From figure \ref{phpa_rep_compare} it is clear when the PHPA's predictive
-element comes into effect, after the start of day 2 - the replica count appears
-to be more erratic; which I believe is a result of poor tuning of the model,
-resulting in seemingly more erratic results.  
-
-Figure \ref{phpa_max_compare} and \ref{phpa_max_compare_3} show an anomaly on
-day 3 for the PHPA, in which the maximum latency suddenly spikes for an
-unexplained reason. I believe this is is an anomaly caused by my load testing
-application failing, rather than due to a reduction in available replicas.
+element comes into effect, after the start of day 2.
 
 Looking at the average latency (figure \ref{phpa_avg_compare}), it appears that
 my hypothesis is confirmed - the PHPA acted proactively and predicted increases
@@ -542,11 +535,19 @@ element proactively scaled to better meet upcoming demand.
 Figure \ref{phpa_avg_compare_3} shows the third day, which follows the same
 liness as the second day, with peaks in average latency eliminated by the PHPA.
 
-The maximum latency (figures \ref{phpa_max_compare}, \ref{phpa_max_compare_1},
-\ref{phpa_max_compare_2}, and \ref{phpa_max_compare_3}) further back up the
-hypothesis, with the first day having a similar performance between the PHPA and
-the HPA, and the second and third days reducing peaks in maximum latency once
-there is data available for the PHPA to predict with.
+Figures \ref{phpa_max_compare_1} and \ref{phpa_max_compare_2} fit my hypothesis,
+with the first day seeing a similar maximum latency performance between the HPA
+and the PHPA, before seeing a reduction in maximum latency spikes in the second day.
+
+The maximum latency, shown in \ref{phpa_max_compare}, reveals a possible
+limitation and complication of applying the predictive model - as the season
+experiment progressed, in the third day, there were some large spikes in maximum
+latency for the PHPA, figure \ref{phpa_max_compare_3} shows this in more detail.
+It appears that as the experiment progressed the replica count became more
+erratic, which could be the cause for these latency spikes. This erratic
+rescaling I believe is caused by the statistical model applied during the
+experiment being poorly tuned, placing a heavy emphasis only on seasonal data,
+causing previous natural fluctuations in replica counts to be exaggerated.  
 
 ![Replica comparison\label{phpa_rep_compare}][phpa_long_replicas]
 
@@ -568,16 +569,17 @@ there is data available for the PHPA to predict with.
 
 ### Conclusion
 
-The PHPA outperforms the HPA in reduction of latency spikes due to increased
-load for seasonal data. The PHPA provides a valuable tool for proactive
-autoscaling, and if applied to regular, predictable and repeating user loads it
-can provide a more effective autoscaling solution than the standard Kubernetes
-HPA. However, the key to effective use of the PHPA is that it needs to be data
-driven, and as such requires tuning to be effective and useful. The PHPA should
-be applied in specific circumstances in which it makes sense; the decision to
-apply it should be driven by an understanding of the system it is being applied
-to and it should be backed with data to allow for better tuning and a more
-useful autoscaling solution.
+The PHPA outperforms the HPA in reduction of average latency spikes due to
+increased load for seasonal data. The PHPA provides a valuable tool for
+proactive autoscaling, and if applied to regular, predictable and repeating user
+loads it can provide a more effective autoscaling solution than the standard
+Kubernetes HPA. However, the key to effective use of the PHPA is that it needs
+to be data driven, and as such requires tuning to be effective and useful. The
+PHPA should be applied in specific circumstances in which it makes sense; the
+decision to apply it should be driven by an understanding of the system it is
+being applied to and it should be backed with data to allow for better tuning
+and a more useful autoscaling solution; otherwise unwanted results such as
+erratic scaling behaviour may arise out of poor tuning decisions.
 
 ## LPA comparison with HPA for high CPU usage application
 

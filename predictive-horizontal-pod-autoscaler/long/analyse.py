@@ -122,35 +122,35 @@ def plot_avg_latency_comparison(svg_name, hpa_latency, phpa_latency):
     fig.tight_layout()
     plt.savefig(f"results/{svg_name}.svg")
 
-def plot_avg_latency_comparison_day(svg_name, day, hpa_latency, phpa_latency):
+def plot_avg_latency_comparison_day(svg_name, day, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas):
     fig, axs = plt.subplots(2, 2,figsize=[15,15])
     axs[0,0].plot(hpa_latency["time"], hpa_latency["avg_response_time"], color="green")
     axs[0,0].legend(["hpa average latency"], loc="upper left")
     axs[0,0].set_xlabel("time")
-    axs[0,0].set_ylabel("number of replicas")
+    axs[0,0].set_ylabel("average latency")
     axs[0,0].set_title("average latency for hpa over time")
     axs[0,0].set_ylim([0,600])
-    axs[0,0].set_xlim([hpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),hpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[0,0].set_xlim([hpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), hpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
-    axs[1,0].set_ylabel("number of requests")
-    axs[1,0].plot(hpa_latency["time"], hpa_latency["num_requests"], color="green")
+    axs[1,0].set_ylabel("number of replicas")
+    axs[1,0].plot(hpa_replicas["time"], hpa_replicas["replicas"], color="green")
     axs[1,0].legend(["hpa number of requests"], loc="upper right")
     axs[1,0].set_title("number of requests for hpa over time")
-    axs[1,0].set_xlim([hpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),hpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[1,0].set_xlim([hpa_replicas["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), hpa_replicas["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
     axs[0,1].plot(phpa_latency["time"], phpa_latency["avg_response_time"], color="purple")
     axs[0,1].legend(["phpa average latency"], loc="upper left")
     axs[0,1].set_xlabel("time")
-    axs[0,1].set_ylabel("number of replicas")
+    axs[0,1].set_ylabel("average latency")
     axs[0,1].set_title("average latency for phpa over time")
     axs[0,1].set_ylim([0,600])
-    axs[0,1].set_xlim([phpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),phpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[0,1].set_xlim([phpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), phpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
-    axs[1,1].set_ylabel("number of requests")
-    axs[1,1].plot(phpa_latency["time"], phpa_latency["num_requests"], color="purple")
-    axs[1,1].legend(["phpa number of requests"], loc="upper right")
-    axs[1,1].set_title("number of requests for phpa over time")
-    axs[1,1].set_xlim([phpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),phpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[1,1].set_ylabel("number of replicas")
+    axs[1,1].plot(phpa_replicas["time"], phpa_replicas["replicas"], color="purple")
+    axs[1,1].legend(["phpa number of replicas"], loc="upper right")
+    axs[1,1].set_title("number of replicas for phpa over time")
+    axs[1,1].set_xlim([hpa_replicas["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), hpa_replicas["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
     for i in range(2):
         for j in range(2):
@@ -164,35 +164,35 @@ def plot_avg_latency_comparison_day(svg_name, day, hpa_latency, phpa_latency):
     fig.tight_layout()
     plt.savefig(f"results/{svg_name}.svg")
 
-def plot_max_latency_comparison_day(svg_name, day, hpa_latency, phpa_latency):
+def plot_max_latency_comparison_day(svg_name, day, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas):
     fig, axs = plt.subplots(2, 2,figsize=[15,15])
     axs[0,0].plot(hpa_latency["time"], hpa_latency["max_response_time"], color="green")
     axs[0,0].legend(["hpa maximum latency"], loc="upper left")
     axs[0,0].set_xlabel("time")
-    axs[0,0].set_ylabel("number of replicas")
+    axs[0,0].set_ylabel("maximum latency")
     axs[0,0].set_title("maximum latency for hpa over time")
     axs[0,0].set_ylim([0,6000])
-    axs[0,0].set_xlim([hpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),hpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[0,0].set_xlim([hpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), hpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
-    axs[1,0].set_ylabel("number of requests")
-    axs[1,0].plot(hpa_latency["time"], hpa_latency["num_requests"], color="green")
-    axs[1,0].legend(["hpa number of requests"], loc="upper right")
-    axs[1,0].set_title("number of requests for hpa over time")
-    axs[1,0].set_xlim([hpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),hpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[1,0].set_ylabel("number of replicas")
+    axs[1,0].plot(hpa_replicas["time"], hpa_replicas["replicas"], color="green")
+    axs[1,0].legend(["hpa number of replicas"], loc="upper right")
+    axs[1,0].set_title("number of replicas for hpa over time")
+    axs[1,0].set_xlim([hpa_replicas["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), hpa_replicas["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
     axs[0,1].plot(phpa_latency["time"], phpa_latency["max_response_time"], color="purple")
     axs[0,1].legend(["phpa maximum latency"], loc="upper left")
     axs[0,1].set_xlabel("time")
-    axs[0,1].set_ylabel("number of replicas")
+    axs[0,1].set_ylabel("maximum latency")
     axs[0,1].set_title("maximum latency for phpa over time")
     axs[0,1].set_ylim([0,6000])
-    axs[0,1].set_xlim([phpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),phpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[0,1].set_xlim([phpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), phpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
-    axs[1,1].set_ylabel("number of requests")
-    axs[1,1].plot(phpa_latency["time"], phpa_latency["num_requests"], color="purple")
-    axs[1,1].legend(["phpa number of requests"], loc="upper right")
-    axs[1,1].set_title("number of requests for phpa over time")
-    axs[1,1].set_xlim([phpa_latency["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'),phpa_latency["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
+    axs[1,1].set_ylabel("number of replicas")
+    axs[1,1].plot(phpa_replicas["time"], phpa_replicas["replicas"], color="purple")
+    axs[1,1].legend(["phpa number of replicas"], loc="upper right")
+    axs[1,1].set_title("number of replicas for phpa over time")
+    axs[1,1].set_xlim([phpa_replicas["time"].min() + pd.to_timedelta((day-1)*24*60*60, unit='s'), phpa_replicas["time"].min() + pd.to_timedelta(day*24*60*60, unit='s')])
 
     for i in range(2):
         for j in range(2):
@@ -211,7 +211,7 @@ def plot_max_latency_comparison(svg_name, hpa_latency, phpa_latency):
     axs[0,0].plot(hpa_latency["time"], hpa_latency["max_response_time"], color="green")
     axs[0,0].legend(["hpa maximum latency"], loc="upper left")
     axs[0,0].set_xlabel("time")
-    axs[0,0].set_ylabel("number of replicas")
+    axs[0,0].set_ylabel("maximum latency")
     axs[0,0].set_title("maximum latency for hpa over time")
 
     axs[1,0].set_ylabel("number of requests")
@@ -222,7 +222,7 @@ def plot_max_latency_comparison(svg_name, hpa_latency, phpa_latency):
     axs[0,1].plot(phpa_latency["time"], phpa_latency["max_response_time"], color="purple")
     axs[0,1].legend(["phpa maximum latency"], loc="upper left")
     axs[0,1].set_xlabel("time")
-    axs[0,1].set_ylabel("number of replicas")
+    axs[0,1].set_ylabel("maximum latency")
     axs[0,1].set_title("maximum latency for phpa over time")
 
     axs[1,1].set_ylabel("number of requests")
@@ -269,13 +269,13 @@ def main():
     plot_latency_comparison("hpa_latency", hpa_latency)
     plot_latency_comparison("phpa_latency", phpa_latency)
     plot_avg_latency_comparison("avg_latency_compare", hpa_latency, phpa_latency)
-    plot_avg_latency_comparison_day("avg_latency_day_1", 1, hpa_latency, phpa_latency)
-    plot_avg_latency_comparison_day("avg_latency_day_2", 2, hpa_latency, phpa_latency)
-    plot_avg_latency_comparison_day("avg_latency_day_3", 3, hpa_latency, phpa_latency)
+    plot_avg_latency_comparison_day("avg_latency_day_1", 1, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas)
+    plot_avg_latency_comparison_day("avg_latency_day_2", 2, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas)
+    plot_avg_latency_comparison_day("avg_latency_day_3", 3, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas)
     plot_max_latency_comparison("max_latency_compare", hpa_latency, phpa_latency)
-    plot_max_latency_comparison_day("max_latency_day_1", 1, hpa_latency, phpa_latency)
-    plot_max_latency_comparison_day("max_latency_day_2", 2, hpa_latency, phpa_latency)
-    plot_max_latency_comparison_day("max_latency_day_3", 3, hpa_latency, phpa_latency)
+    plot_max_latency_comparison_day("max_latency_day_1", 1, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas)
+    plot_max_latency_comparison_day("max_latency_day_2", 2, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas)
+    plot_max_latency_comparison_day("max_latency_day_3", 3, hpa_latency, hpa_replicas, phpa_latency, phpa_replicas)
 
 if __name__ == "__main__":
     main()
