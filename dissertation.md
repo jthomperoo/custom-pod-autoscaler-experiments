@@ -419,14 +419,21 @@ with the Kubernetes API.
 
 # Evaluation
 
-## PHPA comparision with HPA for seasonal loads
+## Predictive Horizontal Pod Autoscaler (PHPA) comparision with Horizontal Pod Autoscaler (HPA) for seasonal loads 
 
 ### Overview
 
-This experiment will run for 3 days and is designed to have the PHPA and HPA 
-running in their own clusters. Everything should be kept the same between the 
-two autoscalers - they will both manage the same application, and the load will 
-be managed by the same load testing logic.  
+Aiming to validate the utility of the Predictive Horizontal Pod Autoscaler (HPA)
+for autoscaling a Kubernetes cluster with realistic data this experiment was
+created to provide a suitable comparison with the existing Kubernetes Horizontal
+Pod Autoscaler (PHPA).
+
+The experiment will involve both autoscalers managing an application that will
+experience varied levels of load. The experiment will seek to evaluate
+performance of the autoscalers in managing these applications; with latency
+results being used to determine effectiveness. Everything should be kept the
+same between the two autoscalers - they will both manage the same application,
+and the load will be managed by the same load testing logic. 
 
 Each test will have have three elements, the autoscaler, an application to
 manage, and the load testing application. The autoscaler will be the only part
@@ -438,6 +445,10 @@ load applied based on the time of day. The load testing will also periodically
 record how many replicas the deployment has. Figure \ref{phpa_long_phpa_diagram}
 shows the experiment overview for the PHPA, while figure
 \ref{phpa_long_hpa_diagram} shows the experiment overview for the HPA.
+
+
+This experiment will run for 3 days and is designed to have the PHPA and HPA 
+running in their own clusters. 
 
 ![Predictive Horizontal Pod Autoscaler Experiment\label{phpa_long_phpa_diagram}][phpa_long_diagram_hpa_design] 
 
@@ -469,18 +480,18 @@ Horizontal Pod Autoscaler:
 
 - Minimum replicas: `1`.
 - Maximum replicas: `20`.
-- Sync Period (`--horizontal-pod-autoscaler-sync-period`): `15` (equivalent to 
-`15s`) (default).
+- Sync Period (`--horizontal-pod-autoscaler-sync-period`): `15` (seconds, same
+  as HPA `15s`) (default).
 - Downscale Stabilization 
-(`--horizontal-pod-autoscaler-downscale-stabilization`): `300` (equivalent to 
-`5m`) (default).
+(`--horizontal-pod-autoscaler-downscale-stabilization`): `300` (seconds, same
+  as HPA `5m`) (default).
 - Tolerance (`--horizontal-pod-autoscaler-tolerance`): `0.1` (default).
 - CPU Initialization Period 
-(`--horizontal-pod-autoscaler-cpu-initialization-period`): `300` (equivalent to 
-`5m`) (default).
+(`--horizontal-pod-autoscaler-cpu-initialization-period`): `300` (seconds, same
+  as HPA `5m`) (default).
 - Initial Readiness Delay 
-(`--horizontal-pod-autoscaler-initial-readiness-delay`): `30` (equivalent to 
-`30s`) (default).
+(`--horizontal-pod-autoscaler-initial-readiness-delay`): `30` (seconds, same
+  as HPA `30s`) (default).
 - Metrics: Resource metric targeting CPU usage, with average utilization at 
 `50`.
 
@@ -498,16 +509,16 @@ configuration settings for tuning the Holt-Winters algorithm:
 
 ### Hypothesis
 
-The Predictive Horizontal Pod Autoscaler using the Holt-Winters prediction 
-method will pre-emptively scale, reacting earlier than the standard Kubernetes 
-Horizontal Pod Autoscaler. This will be manifested in higher replica counts 
-when scaling up, and scaling up earlier; with the result of lower average and 
-maximum latency, and less failed requests - primarily around the moment of 
-change from lower load levels to high load. This effect will only be apparant 
-however after at least one full season (24 hours); for the first season as the 
-predictor won't have data to make a prediction it will be largely the same 
-performance as the standard Kubernetes Horizontal 
-Pod Autoscaler.
+The Predictive Horizontal Pod Autoscaler using the Holt-Winters prediction
+method will pre-emptively scale compared to the standard Kubernetes Horizontal
+Pod Autoscaler which will only retroactively react. This will be manifested in
+higher replica counts when scaling up, and scaling up earlier; with the result
+of lower average and maximum latency, and less failed requests - primarily
+around the moment of change from lower load levels to high load. This effect
+will only be apparant after at least one full season (24 hours); for the
+first season as the predictor won't have data to make a prediction therefore it
+is expected to have approximately the same performance as the standard
+Kubernetes Horizontal Pod Autoscaler.
 
 ### Results
 Figure \ref{phpa_rep_compare} displays how the replica count varies with the
@@ -547,7 +558,9 @@ It appears that as the experiment progressed the replica count became more
 erratic, which could be the cause for these latency spikes. This erratic
 rescaling I believe is caused by the statistical model applied during the
 experiment being poorly tuned, placing a heavy emphasis only on seasonal data,
-causing previous natural fluctuations in replica counts to be exaggerated.  
+causing previous natural fluctuations in replica counts to be exaggerated. This
+fluctation due to tuning should be investigated closely if the PHPA was to be
+used in a production environment.  
 
 ![Replica comparison\label{phpa_rep_compare}][phpa_long_replicas]
 
