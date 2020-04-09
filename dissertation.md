@@ -203,14 +203,11 @@ Logic (UDL). See figure \ref{cpaf} for an overview.
 
 ### Custom Pod Autoscaler Base (CPAB)
 
-The Custom Pod Autoscaler Base (CPAB) is be a program that handles all
-complexities when interacting with Kubernetes and the API. This program provides
-a base for users to write their own logic on top of, while abstracting away much
-of the complexity. The program is highly configurable. See figure \ref{cpab} for
-an overview.  
-
-The CPAB is be built by me as part of this project. The CPAB would be 
-distributed as both a binary and built into a set of Docker images.
+The Custom Pod Autoscaler Base (CPAB) is a program that handles all complexities
+when interacting with Kubernetes and the API. This program provides a base for
+users to write their own logic on top of, while abstracting away much of the
+complexity. The program is highly configurable. See figure \ref{cpab} for an
+overview.  
 
 ![Custom Pod Autoscaler Base Architecture
 Overview\label{cpab}](assets/design/cpab_architecture.svg)
@@ -349,7 +346,7 @@ error will occur.
 ##### Shell Method
 
 The Shell Method allows interaction through a shell command and the Unix pipe
-system. This woulds developers to create their UDL in a flexible way, supporting
+system. This allows developers to create their UDL in a flexible way, supporting
 any language and framework the developer wants to use (Python, Golang, Java
 etc.) - the only requirement is it must be startable by a shell command.  
 
@@ -450,8 +447,6 @@ provisioning all required Kubernetes resources to get it running and allow it to
 interact with the parts of the cluster it needs. See figure \ref{cpao_overview}
 for an overview the CPAO.
 
-The Custom Pod Autoscaler Controller is distributed as a Docker image.
-
 ![Custom Pod Autoscaler Operator
 overview\label{cpao_overview}](assets/design/cpao_overview.svg)
 
@@ -496,6 +491,8 @@ resouces:
 - A role binding/cluster role binding to tie the role/cluster role to the 
 service account.
 - A deployment to run the operator controller inside.
+
+
 
 # Implementation
 
