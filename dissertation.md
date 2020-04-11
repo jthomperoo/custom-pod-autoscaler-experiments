@@ -2,7 +2,18 @@
 title: Kubernetes Custom Autoscaling
 author: Jamie Thompson
 date: 24/04/2020
+include-before:
+- '`\newpage{}`{=latex}'
+header-includes: |
+  \usepackage{fancyhdr}
+  \pagestyle{fancy}
+  \fancyhead[CO,CE]{Kubernetes Custom Autoscaling}
+  \fancyhead[LE,RO]{40178456}
+  \fancyhead[LE,LO]{Jamie Thompson}
+  \fancyfoot[CO,CE]{\thepage}
 ---
+
+\newpage
 
 # Introduction
 
@@ -45,6 +56,8 @@ Kubernetes API knowledge.
 ### Horizontal Pod Autoscaler with Custom Metrics
 
 ### Agones Fleet Autoscaler
+
+\newpage
 
 # Solution
 
@@ -110,7 +123,7 @@ Once a Custom Pod Autoscaler is deployed, it should be easy to interact with -
 it should provide a versioned HTTP REST API for retrieving information and for 
 triggering autoscaling.
 
-
+\newpage
 
 # Requirements
 
@@ -182,7 +195,7 @@ load tested data.
     - Autoscaler written in Golang.
     - Autoscaler that scales based on Twitter activity.
 
-
+\newpage
 
 # Design
 
@@ -231,9 +244,9 @@ retrieved from the UDL.
 
 #### Evaluator
 
-The Evaluator is part of the CPAB responsible for reaching out to the UDLto make
-decisions on how to scale the resource being managed. The Evaluator takes as
-input metrics that have been gathered by the Metric Gatherer; and then feeds
+The Evaluator is part of the CPAB responsible for reaching out to the UDL to
+make decisions on how to scale the resource being managed. The Evaluator takes
+as input metrics that have been gathered by the Metric Gatherer; and then feeds
 this into the UDL responsible for evaluating metrics configured by the developer
 of the CPA. The Evaluator then parses the output from the UDL, catches any
 errors, and then returns evaluations retrieved from the UDL.
@@ -492,52 +505,138 @@ resouces:
 service account.
 - A deployment to run the operator controller inside.
 
-
+\newpage
 
 # Implementation
 
-Both the Base and Operator should be implemented in a maintainable, testable 
-and scalable way. With these three principles in mind the decisions around 
-language, libraries and frameworks were made.
+Both the CPAB and CPAO are implemented with three key principles in mind;
+maintainability, testability and scalability. With these three principles in
+mind the decisions around language, libraries and frameworks were made.
 
 ## Language
 
-The Base and Operator were created using the 'Golang' programming language.  
+The CPAB and CPAO were created using the 'Golang' (or 'Go' for short)
+programming language. 
 
-One of the key benefits of building the application in Golang and distributing 
-it as an open source codebase is that other applications can use the Custom Pod 
-Autoscaler source code as a library import, and directly use Custom Pod 
+### Simplicity
+
+Go is an open source programming language designed with simplicity as a key aim
+of the language. This simplicity is enforced through a rigid and restrictive
+syntax and code format, which ensures consistency in Go code. This simplicity
+and consistency helps keep this project maintainable and approachable for any
+developer that is familiar with Go.
+
+### Concurrency
+
+Go is designed with concurrency as a first class feature, which is useful in
+this project for building a scalable HTTP REST API, alongside providing a
+non-blocking concurrency solution for repeatedly running a timed autoscaler
+alongside the API.
+
+### Interfaces
+
+Go provides implicit interfaces, allowing interfaces to be defined where they
+are consumed; with any structure that fulfils the interface contract to be
+accepted as an interface of that type. This is highly useful for testing,
+allowing easy stubbing of dependency behaviour, even when using third party
+libraries that provide no interfaces.
+
+### Application as a library
+
+One of the key benefits of building the application in Go and distributing it as
+an open source codebase is that other applications can use the Custom Pod
+Autoscaler source code as a library import, and directly use Custom Pod
 Autoscaler structs, methods and interfaces.  
 
-This would be useful for people developing autoscalers in Golang, as they could 
-directly use structs for marshalling/unmarshalling from JSON to ensure 
-compatibility with whichever version of the Custom Pod Autoscaler they are 
-targeting.
+This project has been developed with this understanding that the application
+code will not only be used for building the executable, but also exposed as a
+library for use by other developers when building their integrations and UDL for
+a Custom Pod Autoscaler.  
+
+### Widely Used in Kubernetes Ecosystem
+
+Go is extensively used in the Kubernetes ecoystem, with the Kubernetes main
+project itself written in Go, alongside a number of major libraries such as
+Helm, the Operator Framework and Prometheus integrations. The widespread use of
+Go in the K8s ecosystem has led to a strong community of Go developers, with a
+large amount of documentation, tooling, and support. The Kubernetes API provides
+direct support for Go with the distribution of the `k8s.io/client-go` API
+client, providing a standard toolset for interacting with the Kubernetes API.
 
 ## Semantic Versioning
 
+Both the CPAB and CPAO are versioned using Semantic Versioning - allowing users
+to safely make decisions on upgrading to new versions. This versioning system
+not only applies to the distributed executables and Docker images, but also to
+the Go code importable as a library for developers.  
+
+The core principles of Semantic Versioning are:
+
+> Given a version number MAJOR.MINOR.PATCH, increment the:  
+
+> 1. MAJOR version when you make incompatible API changes,
+> 2. MINOR version when you add functionality in a backwards compatible manner, and
+> 3. PATCH version when you make backwards compatible bug fixes.  
+> Additional labels for pre-release and build metadata are available as
+> extensions to the MAJOR.MINOR.PATCH format.
+
+// TODO INSERT REFERENCE TO https://semver.org/ HERE
+
+Beyond these principles, for initial development an unstable API is presented;
+'Major version zero (0.y.z) is for initial development. Anything MAY change at
+any time. The public API SHOULD NOT be considered stable.' Therefore until
+`v1.0.0` is cut, the API for both the CPAB and CPAO is considered unstable.
+
+// TODO INSERT REFERENCE TO https://semver.org/ HERE
+
+### Changelog
+
+Both the CPAB and CPAO have changes tracked through a changelog, which documents
+all changes between versions. The changelog is formatted according to the 'Keep
+a Changelog' changelog style. The maintenance of this changelog allows users to
+see changes between versions, and make informed decisions on upgrading - while
+also providing a utility for developers for tracking changes between versions.
+
+## Git Version Control
+
+The CPAB and CPAO both use Git for version control, allowing collaboration and
+change tracking. The projects are available as open source repositories on
+GitHub, with issue tracking through GitHub issues and GitHub projects. This
+public Git repository allows collaboration and community driven development,
+with this transparency helping identify bugs and provide useful features.
+
 ## Linting
+
+Both the CPAB and CPAO codebases are linted (static code analysis checking)
+using Golint. This linting process is automated as part of the Continous
+Integration pipeline and can be run locally by developers before pushing their
+changes. This linting process helps ensure the codebase is consistent, clear,
+and idiomatic - which ultimately helps the project remain maintainable.
 
 ## Custom Pod Autoscaler Base
 
 ### Libraries
 
-The following key libraries were used to develop the Custom Pod Autoscaler Base:
+The following key Go libraries were used to develop the Custom Pod Autoscaler
+Base:
 
 * `golang/glog` - Leveled logging for Golang, allowing different verbosity 
-levels, 
-and severity levels (`Info`, `Warning`, `Error`, and `Fatal`).
+levels, and severity levels (`Info`, `Warning`, `Error`, and `Fatal`).
 * `k8s.io/client-go` - Kubernetes API client for Golang, allowing interaction 
 with the Kubernetes API. 
 * `go-chi/chi` - Router for building Golang HTTP services.
 
 ### Docker
 
-## Custom Pod Autoscaler Framework
+## Custom Pod Autoscaler Operator
 
 ### Libraries
 
+#### Operator Framework
 
+### Docker
+
+\newpage
 
 # Testing
 
@@ -555,7 +654,7 @@ with the Kubernetes API.
 
 ### Manual Testing
 
-
+\newpage
 
 # Evaluation
 
