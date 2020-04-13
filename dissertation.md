@@ -212,7 +212,7 @@ the Custom Pod Autoscaler Operator (CPAO). The Custom Pod Autoscaler is further
 split into two parts, the Custom Pod Autoscaler Base (CPAB) and User Defined
 Logic (UDL). See figure \ref{cpaf} for an overview.  
 
-![Custom Pod Autoscaler Framework Overview\label{cpaf}](assets/design/cpaf.svg)
+![Custom Pod Autoscaler Framework Overview\label{cpaf}][design_cpaf_overview]
 
 ### Custom Pod Autoscaler Base (CPAB)
 
@@ -223,7 +223,7 @@ complexity. The program is highly configurable. See figure \ref{cpab} for an
 overview.  
 
 ![Custom Pod Autoscaler Base Architecture
-Overview\label{cpab}](assets/design/cpab_architecture.svg)
+Overview\label{cpab}][design_cpab_architecture]
 
 #### Scaler
 
@@ -271,7 +271,7 @@ managed. If the autoscaler crashes or fails, scaling does not occur; scaling
 only occurs if the autoscaler processes all user defined logic and calculates an
 evaluation correctly and without errors.  
 
-![Autoscaler Logic Flow\label{autoscaler_overview}](assets/design/autoscaler_overview.svg)
+![Autoscaler Logic Flow\label{autoscaler_overview}][design_autoscaler_overview]
 
 #### HTTP REST API
 
@@ -613,28 +613,102 @@ Integration pipeline and can be run locally by developers before pushing their
 changes. This linting process helps ensure the codebase is consistent, clear,
 and idiomatic - which ultimately helps the project remain maintainable.
 
+## Documentation as Code
+
+The two codebases are extensively documented using a *Documetation as Code*
+approach, with documentation stored as markdown in the codebase. This markdown
+documentation is in a wiki format, using `mkdocs` to generate HTML and host the
+documentation locally. When the codebase on GitHub is updated, a service called
+`readthedocs` generates HTML documentation from this markdown and publishes it
+online.  
+
+This *Documentation as Code* approach leads to a more up to date documentation
+set; as a new feature, fix or change is implemented the documentation is updated
+in the same commit by the developer. Since the documentation is stored in the
+same Git repository as the rest of the codebase the documentation is versioned
+alongside the code - allowing viewing of documentation for older versions.
+
 ## Custom Pod Autoscaler Base
 
 ### Libraries
 
-The following key Go libraries were used to develop the Custom Pod Autoscaler
-Base:
+The following Go libraries were used to develop the Custom Pod Autoscaler Base:
 
 * `golang/glog` - Leveled logging for Golang, allowing different verbosity 
 levels, and severity levels (`Info`, `Warning`, `Error`, and `Fatal`).
-* `k8s.io/client-go` - Kubernetes API client for Golang, allowing interaction 
-with the Kubernetes API. 
+* `k8s.io/client-go`, `k8s.io/api`, and `k8s.io/apimachinery` - Kubernetes API
+  client and structures for Golang, allowing interaction with the Kubernetes
+  API. 
 * `go-chi/chi` - Router for building Golang HTTP services.
+* `google/go-cmp` - Deep equality comparisons for testing.
 
-### Docker
+### Distribution
+
+#### Docker
+
+Docker is a foundational technology for Kubernetes, it is a widely used
+open source container runtime. The CPAB is distributed inside/as Docker images,
+with a variety of images provided to allow better and more distributed language
+support. The distributed Docker images are:
+
+* `custompodautoscaler/alpine` - CPAB bundled in an alpine Docker image.
+* `custompodautoscaler/python` - CPAB bundled in a Docker image with a Python 3
+  environment.
+
+#### Binary
+
+The executable binary (Linux 64-Bit) for the CPAB is distributed through GitHub releases,
+allowing the executable to be downloaded directly. Distributing the binary in
+this fashion gives third-party developers flexiblity in how they use the CPAB,
+and allows integration of the exectuable into custom Docker images.
 
 ## Custom Pod Autoscaler Operator
 
 ### Libraries
 
+The following Go libraries were used to develop the Custom Pod Autoscaler Operator:
+
+* `github.com/go-logr/logr` - Standard Operator logging.
+* `github.com/go-openapi/spec` and `k8s.io/kube-openapi` - Generation of YAML
+  specifications from Go code.
+* `github.com/operator-framework/operator-sdk` - The Operator SDK.
+* `k8s.io/client-go`, `k8s.io/api`, and `k8s.io/apimachinery` - Kubernetes API
+  client and structures for Golang, allowing interaction with the Kubernetes
+  API. 
+* `sigs.k8s.io/controller-runtime` and `sigs.k8s.io/controller-tools` -
+  Additional runtime functionality for the Operator controller.
+* `google/go-cmp` - Deep equality comparisons for testing.
+
 #### Operator Framework
 
-### Docker
+> The Operator Framework is an open source toolkit to manage Kubernetes native
+> applications, called Operators, in an effective, automated, and scalable way. 
+
+The CPAO is built using the Operator Framework, which is designed to provide
+higher level API abstractions and project scaffolding for creating a Kubernetes
+Operator. The Operator Framework allows development of the operator in an
+idiomatic and consistent way, whilst providing much of the boilerplate for
+development through the use of the Operator SDK.
+
+#### Docker
+
+The CPAO is distributed as a Docker image, allowing it to be easily pulled down
+from the public Docker repository and directly deployed to Kubernetes clusters.
+The distributed Docker image is `custompodautoscaler/operator` - built on top of
+the `ubi7/ubi-minimal` Red Hat Docker base image, as is standard with an
+Operator Framework operator.
+
+#### Deployment YAML
+
+The CPAO offers bundles of Kubernetes YAML for deploying the Operator easily to
+a Kubernetes cluster. There are two available installation types, either
+cluster-scoped installation or namespace-scoped installation. The cluster-scoped
+option installs the operator with access to the entire cluster, while the
+namespace-scoped option installs the operator only with access to the namespace
+targeted during install.  
+
+Both installation types are simple and easy to install, with two separate
+commands listed in the Git repo's markdown to install each option.
 
 \newpage
 
@@ -861,7 +935,9 @@ erratic scaling behaviour may arise out of poor tuning decisions.
 
 ### Conclusion
 
-
+[design_cpaf_overview]: assets/design/cpaf.svg
+[design_cpab_architecture]: assets/design/cpab_architecture.svg
+[design_autoscaler_overview]: assets/design/autoscaler_overview.svg
 [phpa_long_diagram_hpa_design]:
 predictive-horizontal-pod-autoscaler/long/diagrams/PHPA_long_experiment_k8s_hpa_design.svg
 [phpa_long_diagram_phpa_design]:
