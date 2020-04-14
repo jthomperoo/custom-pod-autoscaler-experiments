@@ -29,6 +29,7 @@ value and how it would have to be implemented without the Custom Pod Autoscaler.
 Generating the report PDF requires:
 
 * [`pandoc`](https://pandoc.org/installing.html)
+* [`pandoc-citeproc`](https://github.com/jgm/pandoc-citeproc)
 * `make` - ([Windows 
 installation](http://gnuwin32.sourceforge.net/packages/make.htm))
 

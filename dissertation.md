@@ -15,6 +15,8 @@ header-includes: |
   \RedeclareSectionCommands[
     afterskip=1.25ex plus .1ex
   ]{paragraph,subparagraph}
+bibliography: bibliography.bib
+citation-style: template/ieee.csl
 ---
 
 # Introduction
@@ -552,17 +554,21 @@ programming language.
 ### Simplicity
 
 Go is an open source programming language designed with simplicity as a key aim
-of the language. This simplicity is enforced through a rigid and restrictive
-syntax and code format, which ensures consistency in Go code. This simplicity
-and consistency helps keep this project maintainable and approachable for any
-developer that is familiar with Go.
+of the language. 'Go attempts to reduce the amount of typing in both senses of
+the word. Throughout its design, we have tried to reduce clutter and
+complexity.' [@golang_faq] This simplicity is enforced through a rigid and
+restrictive syntax and code format, which ensures consistency in Go code. This
+simplicity and consistency helps keep this project maintainable and approachable
+for any developer that is familiar with Go.
 
 ### Concurrency
 
-Go is designed with concurrency as a first class feature, which is useful in
+Go is designed with concurrency as a first class feature - '... the rise of
+multicore CPUs argued that a language should provide first-class support for
+some sort of concurrency or parallelism...' [@golang_faq] - which is useful in
 this project for building a scalable HTTP REST API, alongside providing a
 non-blocking concurrency solution for repeatedly running a timed autoscaler
-alongside the API.
+alongside the API. 
 
 ### Interfaces
 
@@ -584,15 +590,18 @@ code will not only be used for building the executable, but also exposed as a
 library for use by other developers when building their integrations and UDL for
 a Custom Pod Autoscaler.  
 
+### Go Modules
+
+
 ### Widely Used in Kubernetes Ecosystem
 
-Go is extensively used in the K8s ecoystem, with the K8s main
-project itself written in Go, alongside a number of major libraries such as
-Helm, the Operator Framework and Prometheus integrations. The widespread use of
-Go in the K8s ecosystem has led to a strong community of Go developers, with a
-large amount of documentation, tooling, and support. The K8s API provides
-direct support for Go with the distribution of the `k8s.io/client-go` API
-client, providing a standard toolset for interacting with the K8s API.
+Go is extensively used in the K8s ecoystem, with the K8s main project itself
+written in Go, alongside a number of major libraries such as Helm, the Operator
+Framework and Prometheus integrations. The widespread use of Go in the K8s
+ecosystem has led to a strong community of Go developers, with a large amount of
+documentation, tooling, and support. The K8s API provides direct support for Go
+with the distribution of the `k8s.io/client-go` API client, providing a standard
+toolset for interacting with the K8s API.
 
 ## Semantic Versioning
 
@@ -604,21 +613,18 @@ the Go code importable as a library for developers.
 The core principles of Semantic Versioning are:
 
 > Given a version number MAJOR.MINOR.PATCH, increment the:  
-
+>
 > 1. MAJOR version when you make incompatible API changes,
 > 2. MINOR version when you add functionality in a backwards compatible manner, and
 > 3. PATCH version when you make backwards compatible bug fixes.  
 > Additional labels for pre-release and build metadata are available as
-> extensions to the MAJOR.MINOR.PATCH format.
+> extensions to the MAJOR.MINOR.PATCH format. [@semantic_versioning]
 
-// TODO INSERT REFERENCE TO https://semver.org/ HERE
 
 Beyond these principles, for initial development an unstable API is presented;
 'Major version zero (0.y.z) is for initial development. Anything MAY change at
-any time. The public API SHOULD NOT be considered stable.' Therefore until
+any time. The public API SHOULD NOT be considered stable.' [@semantic_versioning] Therefore until
 `v1.0.0` is cut, the API for both the CPAB and CPAO is considered unstable.
-
-// TODO INSERT REFERENCE TO https://semver.org/ HERE
 
 ### Changelog
 
@@ -627,6 +633,15 @@ all changes between versions. The changelog is formatted according to the 'Keep
 a Changelog' changelog style. The maintenance of this changelog allows users to
 see changes between versions, and make informed decisions on upgrading - while
 also providing a utility for developers for tracking changes between versions.
+
+> What is a changelog?
+> A changelog is a file which contains a curated, chronologically ordered list
+> of notable changes for each version of a project. 
+>
+> Why keep a changelog?
+> To make it easier for users and contributors to see precisely what notable
+> changes have been made between each release (or version) of the project.
+> [@keep_a_changelog]
 
 ## Git Version Control
 
@@ -938,7 +953,7 @@ being applied to and it should be backed with data to allow for better tuning
 and a more useful autoscaling solution; otherwise unwanted results such as
 erratic scaling behaviour may arise out of poor tuning decisions.
 
-## Locust Pod Autoscaler (LPA) comparison with Horizontal Pod Autoscaler (HPA) for high CPU usage application
+## Locust Pod Autoscaler (LPA) comparison with Horizontal Pod Autoscaler (HPA)
 
 ### Overview
 
