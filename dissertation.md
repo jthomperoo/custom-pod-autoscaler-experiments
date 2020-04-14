@@ -17,6 +17,8 @@ header-includes: |
   ]{paragraph,subparagraph}
 bibliography: bibliography.bib
 citation-style: template/ieee.csl
+numbersections: true
+secnumdepth: 4
 ---
 
 # Introduction
@@ -203,8 +205,6 @@ load tested data.
 
 # Design
 
-## Custom Pod Autoscaler Framework (CPAF)
-
 The Custom Pod Autoscaler Framework (CPAF) is a combination of systems for
 the creation, management and running of Custom Pod Autoscalers (CPA) - with ease
 of development, use, and configuration of K8s autoscalers as the primary
@@ -220,7 +220,7 @@ Logic (UDL). See figure \ref{cpaf} for an overview.
 
 ![Custom Pod Autoscaler Framework Overview\label{cpaf}][design_cpaf_overview]
 
-### User Defined Logic (UDL)
+## User Defined Logic (UDL)
 
 User Defined Logic (UDL) is the customised programs written by developer
 users of the CPA. The UDL is split into two parts, metric gathering and
@@ -241,7 +241,7 @@ overview\label{cpab_docker_inside}](assets/design/cpab_docker_inside.svg)
 ![Custom Pod Autoscaler UDL outside Docker Container
 overview\label{cpab_docker_outside}](assets/design/cpab_docker_outside.svg)
 
-#### Metric Gathering
+### Metric Gathering
 
 Metric Gathering UDL takes in information about the resource being managed, such
 as a full deployment description and specification, or a full pod description
@@ -250,21 +250,21 @@ format, such as JSON or YAML. The Metric Gathering UDL then runs it's own
 calculations and logic, defined by the CPA developer user, before returning any
 calculated/gathered metrics in JSON.
 
-#### Evaluating
+### Evaluating
 
 Evaluation UDL takes in gathered metric information. This input information has
 to be in a parsable and consistent format, such as JSON or YAML. The Evaluating
 UDL then runs it's own calculations and logic, defined by the CPA developer
 user, before returning any calculated evaluations in JSON.
 
-### Custom Pod Autoscaler Base (CPAB)
+## Custom Pod Autoscaler Base (CPAB)
 
 The Custom Pod Autoscaler Base (CPAB) is a program that handles all interactions
 with K8s through its API. This program provides a base for users to write
 their own logic on top of, while abstracting away much of the complexity. The
 program is highly configurable.  
 
-#### Subsystems
+### Subsystems
 
 The CPAB is structured as a collection of subsystems, with each subsystem
 abstracting out a specific piece of functionality. These subsystems communicate
@@ -280,7 +280,7 @@ overview. The CPAB is split into the following subsystems:
 ![Custom Pod Autoscaler Base Architecture
 Overview\label{cpab}][design_cpab_architecture]
 
-##### Scaler
+#### Scaler
 
 The Scaler is part of the CPAB responsible for interfacing with the K8s
 API. This part is able to take in a target replica count and a K8s resource
@@ -294,7 +294,7 @@ with this information it makes a request to the K8s Scaling API to target the
 replica count provided. K8s will then apply its own processes and will scale the
 resource to the target replica count if the cluster has capacity.
 
-##### Metric Gatherer
+#### Metric Gatherer
 
 The Metric Gatherer is the subsystem of the CPAB responsible for reaching out to
 the UDL to gather metrics. The Metric Gatherer takes input information about the
@@ -304,7 +304,7 @@ parses the output from the UDL, catches any errors, and then returns the metrics
 retrieved from the UDL for other subsystems to use to make scaling decisions or
 expose data through the CPAB API.
 
-##### Evaluator
+#### Evaluator
 
 The Evaluator is the part of the CPAB responsible for interfacing with the UDL to
 make decisions on how to scale the resource being managed. The Evaluator takes
@@ -313,7 +313,7 @@ this into the UDL responsible for evaluating metrics configured by the developer
 of the CPA. The Evaluator then parses the output from the UDL, catches any
 errors, and then returns evaluations retrieved from the UDL.
 
-##### Autoscaler
+#### Autoscaler
 
 The Autoscaler is the subsystem of the CPAB that handles repeatedly running at a
 set interval, linking together the Metric Gatherer, Evaluator and Scaler
@@ -338,7 +338,7 @@ evaluation correctly and without errors.
 
 ![Autoscaler Logic Flow\label{autoscaler_overview}][design_autoscaler_overview]
 
-##### HTTP REST API
+#### HTTP REST API
 
 The CPAB exposes a HTTP REST API for runtime interactions with the CPA. The API
 allows triggering the autoscaler through a HTTP request, retrieving metrics
@@ -355,7 +355,7 @@ The REST API is versioned to ensure compatiblity across new versions, starting
 at API version `v1`. This is usable as `/api/<VERSION>/endpoint` to prevent
 breaking API changes from disrupting systems/workflows.  
 
-Specification of `v1` of the API:  
+##### HTTP REST API v1
 
 **Get Metrics**  
 *Route* : `/api/v1/metrics`  
@@ -369,7 +369,7 @@ Used to run metric gathering and return the results.
 
 Used to evaluate metrics and then scale based on them.
 
-#### Configuration Options
+### Configuration Options
 
 Configuration for the CPA is available at both container-build time and deploy
 time. This configuration is provided through either a YAML configuration file
@@ -402,7 +402,7 @@ The following options are be configurable:
   only allows the autoscaler to scale to the maximum evaluation over this time
   period.
 
-#### Methods
+### Methods
 
 UDL is accessed and triggered through an abstraction called *Methods*, which are
 configurable ways to call and interact with User Defined Logic. A *Method* is
@@ -427,7 +427,7 @@ There are two available methods in the current CPAB:
 - Shell Method
 - HTTP Method
 
-##### Shell Method
+#### Shell Method
 
 The Shell Method allows interaction through a shell command and the Unix pipe
 system. This allows developers to create their UDL in a flexible way, supporting
@@ -439,7 +439,7 @@ The Shell Method is specified by providing the following:
 - An entrypoint for the shell command, for example `/bin/bash`.
 - The command to execute, for example `python script.py`.
 
-##### HTTP Method
+#### HTTP Method
 
 The HTTP Method allows interaction through HTTP calls. This allows developers to
 expose an API for the CPAB to call, and their UDL could run anywhere - within
@@ -455,7 +455,7 @@ The HTTP Method is specified by providing the following:
 - A choice of parameter method, allowing data to be transferred either through a
   query parameter or a body parameter.
 
-#### Hooks
+### Hooks
 
 The CPA exposes a series of hooks for injecting further customisation:
 
@@ -468,7 +468,7 @@ The CPA exposes a series of hooks for injecting further customisation:
 - After scaling decision, given min and max replicas, current replicas, target
   replicas, and resource being scaled. 
 
-#### Kubernetes Resources
+### Kubernetes Resources
 
 Running the CPA in a K8s cluster requires some configuration in the
 cluster. The CPA requires a single pod deployment to run in; K8s manages
@@ -485,7 +485,7 @@ Required Resources:
 - Role.
 - Role Binding.
 
-### Custom Pod Autoscaler Operator
+## Custom Pod Autoscaler Operator
 
 The Custom Pod Autoscaler Operator (CPAO) allows for quick and easy creation of
 CPAs, taking in a K8s custom resource description of the CPA and
@@ -496,14 +496,14 @@ for an overview the CPAO.
 ![Custom Pod Autoscaler Operator
 overview\label{cpao_overview}](assets/design/cpao_overview.svg)
 
-#### Custom Pod Autoscaler Custom Resource
+### Custom Pod Autoscaler Custom Resource
 
 A custom resource in K8s is an extension of the K8s API that
 allows a short hand for quickly installing/deploying resources. CPAs are set up
 as a custom resource on the cluster. The custom resource allows users to define
 a CPA in a concise way, allowing for quick and easy install. 
 
-#### Custom Pod Autoscaler Controller
+### Custom Pod Autoscaler Controller
 
 A controller in K8s is the implementation of the custom resource API, 
 allowing logic to be written for creation/updating/deleting custom resources. 
@@ -522,7 +522,7 @@ The Controller is also be responsible for reading in configuration included in
 the CPA custom resource and injecting this runtime configuration as environment
 variables into the CPA Docker container.
 
-#### Kubernetes Resources
+### Kubernetes Resources
 
 The Custom Pod Autoscaler Operator requires the following K8s 
 resouces:
