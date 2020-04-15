@@ -549,7 +549,7 @@ mind the decisions around language, libraries and frameworks were made.
 ## Language
 
 The CPAB and CPAO were created using the 'Golang' (or 'Go' for short)
-programming language. 
+programming language, version `1.13`.
 
 ### Simplicity
 
@@ -592,6 +592,13 @@ a Custom Pod Autoscaler.
 
 ### Go Modules
 
+The version of Go used provides the *Go Modules* feature, with complete Golang
+dependencies described by a Go module file `go.mod` and a checksum file
+`go.sum`. This allows completely reproducible builds, while also providing ease
+of use for developers, as they can add, remove and update dependencies through
+the Go command line program. This go module feature allows a new developer to
+join the project and retrieve all dependencies easily and reliably - reducing
+set up time and difficulty.
 
 ### Widely Used in Kubernetes Ecosystem
 
