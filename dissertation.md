@@ -23,17 +23,23 @@ secnumdepth: 4
 
 # Introduction
 
-Kubernetes (K8s) in its current state allows setting how many pods a deployment has, 
-allowing you to set a target amount of pods it should have and K8s will 
-reconcile this and ensure that it reaches that target.  
+Kubernetes (K8s) is a container orchestration system, which allows sharing
+compute resources between applications that run on it. K8s uses the abstractions
+of *pods* and *resources* to represent these compute resources. A pod is
+analogous to a container, while a resource is an application and the pods that
+the application is running on.
 
-K8s provides the Horizontal Pod Autoscaler (HPA) which allows automatic 
-scaling of the number of pods a deployment has based on metrics that you feed 
-into the HPA. Generally these metrics are CPU/memory load of the pod, allowing 
-scaling up if the load gets too much or down if resources are underutilized; 
-but also includes custom metrics defined through the metrics API. The HPA takes 
-these metrics and applies a built in algorithm to them to determine the number 
-of pods to scale up/down.
+K8s in its current state allows setting how many pods a resource has, allowing
+you to set a target amount of pods it should have and K8s will reconcile this
+and ensure that it reaches that target.  
+
+K8s provides the *Horizontal Pod Autoscaler* (HPA) which allows automatic scaling
+of the number of pods a resource has based on metrics that you feed into the
+HPA. Generally these metrics are CPU/memory load of the pod, allowing scaling up
+if the load gets too much or down if resources are underutilized; but also
+includes custom metrics defined through the metrics API. The HPA takes these
+metrics and applies a built in algorithm to them to determine the number of pods
+to scale up/down. This process is called *autoscaling*.
 
 ## Problems
 
@@ -44,6 +50,13 @@ There are two problems in the current K8s HPA setup:
 
 ### Hard-coded Algorithm
 
+The HPA built in algorithm is:
+
+```
+desiredReplicas = ceil[currentReplicas * ( currentMetricValue / desiredMetricValue )]
+```
+[@kubernetes_io_hpa]
+
 The built in algorithm may not suit your needs; you may require more complex 
 scaling logic. The only way to currently resolve this is to write your own 
 scaler from scratch, which is a complex and difficult task - with an added 
@@ -52,16 +65,110 @@ requires an intimate understanding of K8s and its APIs.
 
 ### Custom Metrics Difficulty
 
-Custom metrics requires the use of third party adapters (e.g. Prometheus), or 
-requires the user to write their own adapter. This requires a lot of 
-configuration, and in the case of writing their own adapter requires in-depth 
-K8s API knowledge.
+Custom metrics requires the use of third party adapters (e.g. Prometheus, Sysdig
+Monitor), or requires the user to write their own adapter. This requires a lot
+of configuration, and in the case of writing their own adapter requires in-depth
+K8s API knowledge. See figure \ref{sysdig_scaler_overview} for an example Sysdig
+autoscaling system, and figure \ref{general_custom_metrics} for a generalised
+system.
+
+![Sysdig Custom Metrics autoscaling overview\label{sysdig_scaler_overview}
+[@sysdig_custom_metrics]](assets/intro/sysdig_kubernetes_scaler_overview.png)
+
+![General Custom Metrics autoscaling
+overview\label{general_custom_metrics}](assets/intro/existing_k8s_metrics.svg)
+
+## Users
+
+There are three key users that are affected by the current problems with the
+current Kubernetes autoscaling setup:
+
+- Developer
+- Cluster Administrator
+- Consumer
+
+There is overlap in these users, a user may fit both the Developer and Cluster
+Administrator categories, or any mix of categories.
+
+### Developer
+
+The Developer is the user that builds custom autoscalers, the problem that
+they face is that custom autoscalers are difficult and time consuming to create;
+with an added overhead of testing, maintenance and responsibility for a complete
+custom autoscaling system. The developer must have in-depth K8s knowledge to
+develop the custom autoscaler, which is an investment of time and effort.
+
+### Cluster Administrator
+
+The Cluster Administrator is the user that is responsible for K8s cluster
+operations, deploying autoscalers and determining which autoscaling metrics to
+use. This user faces the issue that a complex HPA integration, using third party
+adapters and tooling is complicated to configure and maintain. The complexity of
+these autoscaling systems can make them brittle and easy to break. 
+
+### Consumer
+
+The Consumer is the user that accesses the application running on the K8s
+cluster that is being managed by an autoscaler. The problems this user can face
+is less responsive applications, or an increased cost in using the service; due
+to lack of flexiblity in autoscaling solutions to manage compute resources.
 
 ## Existing Attempts at Solutions
 
 ### Horizontal Pod Autoscaler with Custom Metrics
 
+Augmenting the HPA with *custom metrics* goes some way in addressing some of the
+problems, granting greater flexibilty beyond standard K8s metrics such as CPU,
+and memory use. Custom metrics are user-defined metrics, which can be generated
+by other applications and integrated with standard K8s metrics. The custom
+metrics approach allows supplying more data to the HPA to use for scaling,
+allowing a the Cluster Administrator user greater control over the autoscaling process. 
+
+This approach does not address all of the problems. This approach still relies
+on the hard-coded HPA scaling algorithm, which can can make a scaling technique
+using this very complex, or even ultimately could block a certain method
+entirely. The custom metrics style of autoscaling has an added overhead in
+complexity, with third-party adapters and applications required to generate,
+collect and feed the custom metrics into the K8s metrics API. This requires more
+maintenance, configuration and understanding of a variety of systems to augment
+the K8s cluster.
+
 ### Agones Fleet Autoscaler
+
+>Agones is a library for hosting, running and scaling dedicated game servers on
+>Kubernetes. 
+[@agones_overview]
+
+Agones provides a custom autoscaler for the Agones game hosting K8s framework.
+This autoscaler is called the *Fleet Autoscaler*, this autoscaler is designed to
+scale game servers - allowing the use of a buffer based autoscaling strategy, or
+a webhook driven strategy; allowing the injection of custom autoscaling logic.
+
+Buffer based autoscaling works by ensuring that there are a minimum and maximum
+number of available game servers; this is an alternative to autoscaling based on
+other metrics such as CPU usage or memory, which would not make sense for a game
+server.
+
+The webhook driven autoscaling works by allowing users to deploy a web server to
+respond to webhooks, and configuring the autoscaler to send HTTPS requests to
+this web server to determine how to scale. The web server responds with a
+standard response on how to scale the resource
+[@agones_autoscaler_specification].
+
+The Agones Fleet Autoscaler addresses many of the issues highlighted - providing
+n alternative to the hard-coded autoscaling algorithm of the HPA through the
+buffer and webhook driven autoscaling techniques. The webhook method provides
+the ability to inject custom user written logic, exposed through an HTTP API.
+This would allow a developer to create custom autoscaling, and allow a cluster
+administrator to apply different scaling techniques.
+
+The drawback of the Agones Fleet Autoscaler is that it is only available as part
+of the Agones ecosystem. The autoscaler is not generalised and requires the use
+of Agones abstractions such as *fleets*, which prevent it from being deployed on
+a standard K8s cluster. If a user wanted to utilise this autoscaling technique,
+they would be required to use the entire Agones framework - which is built
+exclusively for game server hosting, and as such is not applicable to most
+scenarios.
 
 \newpage
 
@@ -960,16 +1067,6 @@ being applied to and it should be backed with data to allow for better tuning
 and a more useful autoscaling solution; otherwise unwanted results such as
 erratic scaling behaviour may arise out of poor tuning decisions.
 
-## Locust Pod Autoscaler (LPA) comparison with Horizontal Pod Autoscaler (HPA)
-
-### Overview
-
-### Hypothesis
-
-### Results
-
-### Conclusion
-
 ## Autoscaling based on Twitter activity
 
 ### Overview
@@ -982,11 +1079,13 @@ erratic scaling behaviour may arise out of poor tuning decisions.
 
 ### Conclusion
 
-## Game Server Scaling
+## Meeting Requirements
 
-### Overview
+\newpage
 
-### Conclusion
+# Conclusion
+
+\newpage
 
 [design_cpaf_overview]: assets/design/cpaf.svg
 [design_cpab_architecture]: assets/design/cpab_architecture.svg

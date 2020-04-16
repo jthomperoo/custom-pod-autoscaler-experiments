@@ -5,4 +5,5 @@ default:
 	  -V geometry:margin=1in           \
 	  --table-of-contents              \
 	  --template template/eisvogel.tex \
-	  --filter pandoc-citeproc
+	  --filter pandoc-citeproc         \
+	  --listings
