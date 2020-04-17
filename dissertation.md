@@ -242,42 +242,72 @@ triggering autoscaling.
 
 ## Must Have
 
-- Can deploy a Docker image with autoscaling application into a K8s 
-cluster.
+- Can deploy a Docker image with autoscaling application into a K8s cluster.
+  - Multiple distributed Docker images for various languages/environments.
+    - Python Docker image.
+    - Alpine Docker image.
 - Autoscaler repeatedly runs.
-- Supports user logic, can triggered through a shell command, allows 
-specification in any language/framework that supports being called through 
-shell commands.
-    - Supports HTTP requests from user logic.
-- If user logic specifies that the number of replicas should change, scaling 
-should occur and the number of pods should be adjusted.
+- Supports user logic, can triggered through a shell command, allows
+  specification in any language/framework that supports being called through
+  shell commands. 
+  - Supports HTTP requests from user logic.
+- If user logic specifies that the number of replicas should change, scaling
+  should occur and the number of pods should be adjusted. 
 - \>= 70% Unit test coverage.
 - Can be deployed with K8s YAML.
-- K8s Custom Resource specifiying the Custom Pod Autoscaler to allow for 
-simpler and easier deployment/configuration.
+- K8s Custom Resource specifiying the Custom Pod Autoscaler to allow for simpler
+  and easier deployment/configuration. 
 - Syntax validation for Custom Pod Autoscaler K8s YAML.
-- Deploying the K8s Custom Resource should provision all required 
-K8s resources for the autoscaler.
+- Deploying the K8s Custom Resource should provision all required K8s resources
+  for the autoscaler. 
 - Can deliver configuration options through K8s YAML.
-- Can deliver configuration options through a supplied configuration file baked 
-into the autoscaler image.
+- Can deliver configuration options through a supplied configuration file baked
+  into the autoscaler image. 
 - Configuration options.
-    - How frequently the autoscaler runs.
-    - Minimum and Maximum replicas
-    - Which resource to target for scaling.
-    - Timeouts for metric and evaluation gathering.
+  - How frequently the autoscaler runs.
+  - Minimum and Maximum replicas
+  - Which resource to target for scaling.
+  - Timeouts for metric and evaluation gathering.
 - Can delete the autoscaler.
-    - Deletes all associated K8s resources.
+  - Deletes all associated K8s resources.
 
 ## Should Have
 
 - *Cooldown* feature to avoid *thrashing*.
+  - Thrashing is when a resource is scaled up and down repeatedly in a short
+    period of time, caused by being right on the threshold of an evaluation. For
+    example, if the number of pods in a resource rapidly changes between 2 and
+    3 because of small changes in the metrics as it is directly on a
+    boundary/threshold.
+  - Cooldown would allow defining a time period to gather metrics in and scale
+    the highest value in that window. This would ensure that downscaling did not
+    happen too quickly or erratically, and help smooth out the number of
+    replicas over time.
 - Allow choosing which pods to terminate when scaling down.
-- Manual triggering of the Custom Pod Autoscaler metric gathering and 
-evaluation through an API.
-  - Provide a *dry run* flag to the API to allow seeing how the autoscaler 
-would scale without applying the results.
+  - The CPA evaluator could decide which pods to terminate when scaling down,
+    rather than relying on the Kubernetes decision making which bases it on how
+    old the pod is.
+  - This could be a list of pods with priorities assigned to them, with the
+    lowest priority pods terminated when scaling down as needed.
+- Manual triggering of the Custom Pod Autoscaler metric gathering and evaluation
+  through an API.
+  - Rather than being triggered just by the timer and at set intervals, the
+    Custom Pod Autoscaler evaluation could be triggered manually, through a REST
+    endpoint.
+  - This would allow users to send an HTTP request to the Custom Pod Autoscaler
+    and start an evaluation immediately, rather than waiting for the interval to
+    expire.
+  - Provide a *dry run* flag to the API to allow seeing how the autoscaler would
+    scale without applying the results. 
 - Hooks for different actions/stages in the autoscaling process.
+  - Hooks would be points at which a user-defined shell command is executed, to
+    allow users to have greater control of the Custom Pod Autoscaler. 
+      - Before metric gathering.
+      - After metric gathering.
+      - Before evaluation.
+      - After evaluation.
+      - Before scaling.
+      - After scaling.
 - Support scaling all resources the Horizontal Pod Autoscaler can scale.
   - ReplicaSets.
   - ReplicationControllers.
@@ -291,18 +321,19 @@ outside of the autoscaling pod, or even outside of the cluster.
 for each pod the targeted resource manages.
   - Can run in a *per resource* autoscaling mode, which will run metric 
 gathering only once for the targeted resource.
-- Full customisation of K8s resources, allowing Custom Pod Autoscalers 
-to define their own resource dependencies.
-  - When this customised resource is provided, the Custom Pod Autoscaler should 
-have ownership; meaning if the autoscaler is deleted the resource is deleted.
+- Full customisation of K8s resources, allowing Custom Pod Autoscalers to define
+  their own resource dependencies. 
+  - When this customised resource is provided, the Custom Pod Autoscaler should
+    have ownership; meaning if the autoscaler is deleted the resource is
+    deleted. 
 - Custom Pod Autoscaler GUI.
   - GUI to view and manage custom pod autoscalers.
 - Implemented Custom Pod Autoscalers
   - Horizontal Pod Autoscaler; reimplemented as a Custom Pod Autoscaler.
-  - Predictive Horizontal Pod Autoscaler; Horizontal Pod Autoscaler extended 
-with statistical prediction techniques.
-  - Load Testing Pod Autoscaler; autoscaler allowing scaling based on realtime 
-load tested data.
+  - Predictive Horizontal Pod Autoscaler; Horizontal Pod Autoscaler extended
+    with statistical prediction techniques.
+  - Load Testing Pod Autoscaler; autoscaler allowing scaling based on realtime
+    load tested data. 
   - Examples to help developers.
     - Autoscaler written in Python.
     - Autoscaler written in Golang.
@@ -325,9 +356,9 @@ the Custom Pod Autoscaler Operator (CPAO). The Custom Pod Autoscaler is further
 split into two parts, the Custom Pod Autoscaler Base (CPAB) and User Defined
 Logic (UDL). See figure \ref{cpaf} for an overview.  
 
-![Custom Pod Autoscaler Framework Overview\label{cpaf}][design_cpaf_overview]
+![Custom Pod Autoscaler Framework Overview\label{cpaf}](assets/design/cpaf.svg)
 
-## User Defined Logic (UDL)
+## User Defined Logic
 
 User Defined Logic (UDL) is the customised programs written by developer
 users of the CPA. The UDL is split into two parts, metric gathering and
@@ -364,7 +395,7 @@ to be in a parsable and consistent format, such as JSON or YAML. The Evaluating
 UDL then runs it's own calculations and logic, defined by the CPA developer
 user, before returning any calculated evaluations in JSON.
 
-## Custom Pod Autoscaler Base (CPAB)
+## Custom Pod Autoscaler Base
 
 The Custom Pod Autoscaler Base (CPAB) is a program that handles all interactions
 with K8s through its API. This program provides a base for users to write
@@ -385,7 +416,7 @@ overview. The CPAB is split into the following subsystems:
 - HTTP REST API
 
 ![Custom Pod Autoscaler Base Architecture
-Overview\label{cpab}][design_cpab_architecture]
+Overview\label{cpab}](assets/design/cpab_architecture.svg)
 
 #### Scaler
 
@@ -430,7 +461,7 @@ The Autoscaler is the full automatic scaling pipeline, which operates repeatedly
 on a configured schedule. The Autoscaler first calls the Metric Gatherer to
 retrieve metrics, and then feeds these metrics into the Evaluator to retrieve an
 evaluation, before finally sending this evaluation to the Scaler to scale the
-resource through the Kubernetes API. See figure \ref{autoscaler_overview} for an
+resource through the K8s API. See figure \ref{autoscaler_overview} for an
 overview of the autoscaler's flow.  
 
 The Autoscaler runs repeatedly at a set interval, gathering metrics, evaluating
@@ -443,7 +474,7 @@ managed. If the autoscaler crashes or fails, scaling does not occur; scaling
 only occurs if the autoscaler processes all user defined logic and calculates an
 evaluation correctly and without errors.  
 
-![Autoscaler Logic Flow\label{autoscaler_overview}][design_autoscaler_overview]
+![Autoscaler Logic Flow\label{autoscaler_overview}](assets/design/autoscaler_overview.svg)
 
 #### HTTP REST API
 
@@ -635,11 +666,11 @@ The Custom Pod Autoscaler Operator requires the following K8s
 resouces:
 
 - A role/cluster role to define permissions required by the operator.
-  * Ability to get/create/delete/update service accounts.
-  * Ability to get/create/delete/update deployments.
-  * Ability to get/create/delete/update role bindings.
-  * Ability to get/create/delete/update roles.
-  * Ability to get/create/delete/update custom pod autoscaler custom resources.
+  - Ability to get/create/delete/update service accounts.
+  - Ability to get/create/delete/update deployments.
+  - Ability to get/create/delete/update role bindings.
+  - Ability to get/create/delete/update roles.
+  - Ability to get/create/delete/update custom pod autoscaler custom resources.
 - A service account for the operator to use.
 - A role binding/cluster role binding to tie the role/cluster role to the 
 service account.
@@ -788,19 +819,27 @@ in the same commit by the developer. Since the documentation is stored in the
 same Git repository as the rest of the codebase the documentation is versioned
 alongside the code - allowing viewing of documentation for older versions.
 
+## Git Feature Branch Workflow
+
+The CPAB and CPAO are developed using the *Git feature branch worflow*, in which
+each feature is developed in a separate branch before being merged into the
+`master` branch once all checks have passed. No development is done on the
+`master` branch directly, ensuring that `master` contains a working, tested and
+releasable codebase at all times.
+
 ## Custom Pod Autoscaler Base
 
 ### Libraries
 
 The following Go libraries were used to develop the Custom Pod Autoscaler Base:
 
-* `golang/glog` - Leveled logging for Golang, allowing different verbosity 
+- `golang/glog` - Leveled logging for Golang, allowing different verbosity 
 levels, and severity levels (`Info`, `Warning`, `Error`, and `Fatal`).
-* `k8s.io/client-go`, `k8s.io/api`, and `k8s.io/apimachinery` - K8s API
+- `k8s.io/client-go`, `k8s.io/api`, and `k8s.io/apimachinery` - K8s API
   client and structures for Golang, allowing interaction with the K8s
   API. 
-* `go-chi/chi` - Router for building Golang HTTP services.
-* `google/go-cmp` - Deep equality comparisons for testing.
+- `go-chi/chi` - Router for building Golang HTTP services.
+- `google/go-cmp` - Deep equality comparisons for testing.
 
 ### Distribution
 
@@ -811,8 +850,8 @@ open source container runtime. The CPAB is distributed inside/as Docker images,
 with a variety of images provided to allow better and more distributed language
 support. The distributed Docker images are:
 
-* `custompodautoscaler/alpine` - CPAB bundled in an alpine Docker image.
-* `custompodautoscaler/python` - CPAB bundled in a Docker image with a Python 3
+- `custompodautoscaler/alpine` - CPAB bundled in an alpine Docker image.
+- `custompodautoscaler/python` - CPAB bundled in a Docker image with a Python 3
   environment.
 
 #### Binary
@@ -828,16 +867,16 @@ and allows integration of the exectuable into custom Docker images.
 
 The following Go libraries were used to develop the Custom Pod Autoscaler Operator:
 
-* `github.com/go-logr/logr` - Standard Operator logging.
-* `github.com/go-openapi/spec` and `k8s.io/kube-openapi` - Generation of YAML
+- `github.com/go-logr/logr` - Standard Operator logging.
+- `github.com/go-openapi/spec` and `k8s.io/kube-openapi` - Generation of YAML
   specifications from Go code.
-* `github.com/operator-framework/operator-sdk` - The Operator SDK.
-* `k8s.io/client-go`, `k8s.io/api`, and `k8s.io/apimachinery` - K8s API
+- `github.com/operator-framework/operator-sdk` - The Operator SDK.
+- `k8s.io/client-go`, `k8s.io/api`, and `k8s.io/apimachinery` - K8s API
   client and structures for Golang, allowing interaction with the K8s
   API. 
-* `sigs.k8s.io/controller-runtime` and `sigs.k8s.io/controller-tools` -
+- `sigs.k8s.io/controller-runtime` and `sigs.k8s.io/controller-tools` -
   Additional runtime functionality for the Operator controller.
-* `google/go-cmp` - Deep equality comparisons for testing.
+- `google/go-cmp` - Deep equality comparisons for testing.
 
 #### Operator Framework
 
@@ -874,32 +913,164 @@ commands listed in the Git repo's markdown to install each option.
 
 # Testing
 
-## Continuous Integration Pipeline
+Both the CPAB and CPAO are designed to run as key parts of infrastructure for a
+K8s cluster - requiring extensive testing. The key aims for the testing should
+be that the software is able to produce scaling results under normal conditions,
+and under failing conditions it should be able to handle errors and fail safely.
+Confidence in meeting these two aims is essential for these projects, to allow
+trust for them to be deployed to production environments and on K8s systems both
+large and small.  
+
+The use of semantic versioning in these projects also presents the aim of no
+unexpected breaking changes, a testing strategy is vitally important for this to
+allow users to confidently upgrade between versions without being concerned
+about breaking systems. Thorough testing also prevents software regression with
+new versions, with previously fixed bugs being reintroduced.
+
+With these primary aims in mind the CPAB and CPAO testing strategies are designed.
+
+## Unit Tests
+
+Unit tests for the CPAB and CPAO are written in Go using the standard Go testing
+library. The tests are structured in a table-driven testing style; which is a
+convention in Go tests. Table-driven tests use the same testing procedure for a
+test, but allow varying input and expected output in a table of subtests - this
+allows for ease of adding new tests by adjusting input and expected output.  
+
+Both projects have a requirement of at least 70% unit test coverage of both the
+entire codebase and any new code being added, otherwise the build will fail.  
+
+In the CPAB and CPAO a decision was made not to run unit tests against the main
+function entry into the programs, instead the main method is tested through the
+manual testing. The rationale behind this is that the main method is mostly code
+initialisation and is not a modular, self-contained component that has clearly
+defined inputs and outputs - testing this should be based on the behaviour of
+the application. The main method is excluded from coverage calculations.
 
 ## Custom Pod Autoscaler Base
 
-### Unit Tests
+### Unit Test Coverage
+
+The CPAB has unit test coverage of 95%.
 
 ### Manual Testing
+
+#### Autoscaler with Failing User Defined Logic
+
+#### Autoscaler running in Per Resource Mode
+
+#### Autoscaler running in Per Pod Mode
+
+#### Autoscaler with API disabled
+
+#### Autoscaler with HTTPS API
+
+#### Autoscaler with No Configuration Provided
+
+#### Autoscaler Starting at a Full Minute
 
 ## Custom Pod Autoscaler Operator
 
-### Unit Tests
+### Unit Test Coverage
+
+The CPAO has unit test coverage of 98%.
 
 ### Manual Testing
+
+#### Deploy Custom Pod Autoscaler Operator Namespace-wide
+
+This tests that the CPAO can be deployed namespace wide on a cluster.
+
+1. Run the following command to deploy to do a namespace deploy on the cluster:
+```
+NAMESPACE=<INSERT_NAMESPACE_HERE>
+VERSION=<INSERT_VERSION_HERE>
+kubectl config set-context --current --namespace=${NAMESPACE}
+curl -L "https://github.com/jthomperoo/custom-pod-autoscaler-operator/releases/download/${VERSION}/namespace.tar.gz" | tar xvz --to-command 'kubectl apply -f -'
+```
+2. Ensure the following resources exist in the namespace provided.
+  - A Deployment called ``.
+  - A Pod called ``.
+  - A Service Account called ``.
+  - A Role called ``.
+  - A RoleBinding called ``.
+
+3. Ensure the Pod is running.
+
+#### Deploy Custom Pod Autoscaler Operator Cluster-wide
+
+This tests that the CPAO can be deployed namespace wide on a cluster.
+
+1. Run the following command to deploy to do a namespace deploy on the cluster:
+```
+VERSION=<INSERT_VERSION_HERE>
+curl -L "https://github.com/jthomperoo/custom-pod-autoscaler-operator/releases/download/${VERSION}/cluster.tar.gz" | tar xvz --to-command 'kubectl apply -f -'
+```
+2. Ensure the following resources exist in the default namespace.
+  - A Deployment called ``.
+  - A Pod called ``.
+  - A Service Account called ``.
+  - A ClusterRole called ``.
+  - A ClusterRoleBinding called ``.
+3. Ensure the Pod is running.
+
+#### Deploy and Delete a Custom Pod Autoscaler
+
+This tests that a running CPA can be deployed, resources are created, and then
+deleted and all resources deleted by the CPAO.
+
+1. Install either the cluster wide or namespace wide operator on a cluster.
+2. Deploy a sample CPA, from the `/examples` directory in the Custom Pod
+   Autoscaler Base GitHub repository.
+   - Deploy using `kubectl apply -f <EXAMPLE_YAML_FILE>`
+3. Ensure the following resources are created in the namespace targeted by the
+   example YAML file.
+   - A Deployment.
+   - A Pod.
+   - A Service Account.
+   - A Role.
+   - A RoleBinding.
+4. Delete the CPA using `kubectl delete cpa <NAME_OF_CPA>`
+5. Ensure all resources listed above are deleted.
+
+## Continuous Integration Pipeline
+
+The CPAB and CPAO utilise *Continous Integration pipelines* (or CI pipelines) -
+specifically GitHub Actions. These CI pipelines allow ongoing code quality
+checking, testing and building of projects on a commit basis. Every time a new
+commit or pull request is submitted to either projects' GitHub repository a
+series of checks are executed through GitHub Actions:
+
+- Linting (static code analysis)
+- Testing
+- Building
+- Publishing
+
+This automatic process ensures that any code that is in the main branch of
+either project has been linted, tested and can be built without errors. Building
+and publishing as part of this CI process allows for reproducible, versioned builds, and
+addresses issues of trust for distributables as all artifacts are built on the
+CI server rather than on a personal computer.
+
+## Codecov
+
+Code coverage from unit tests is tracked and logged through *Codecov*, a code
+coverage tracking tool that allows coverage comparisons and checks between
+commits, releases and branches. This tool is useful for ensuring that any code
+committed to the main branch is appropriately tested, meeting minimum coverage
+criteria. The Codecov tool also provides a badge for displaying test coverage
+for a project, which is displayed on each projects' `README.md` files to allow
+potential users to have confidence in each project.
 
 \newpage
 
 # Evaluation
 
-## Predictive Horizontal Pod Autoscaler (PHPA) comparision with Horizontal Pod Autoscaler (HPA) for seasonal loads 
+## Predictive Horizontal Pod Autoscaler comparision with Horizontal Pod Autoscaler for seasonal loads 
 
-### Overview
-
-Aiming to validate the utility of the Predictive Horizontal Pod Autoscaler (HPA)
+Aiming to validate the utility of the Predictive Horizontal Pod Autoscaler (PHPA)
 for autoscaling a K8s cluster with realistic data this experiment was
-created to provide a suitable comparison with the existing K8s Horizontal
-Pod Autoscaler (PHPA).
+created to provide a suitable comparison with the existing K8s HPA.
 
 The experiment will involve both autoscalers managing an application that will
 experience varied levels of load. The experiment will seek to evaluate
@@ -923,9 +1094,9 @@ shows the experiment overview for the PHPA, while figure
 This experiment will run for 3 days and is designed to have the PHPA and HPA 
 running in their own clusters. 
 
-![Predictive Horizontal Pod Autoscaler Experiment\label{phpa_long_phpa_diagram}][phpa_long_diagram_hpa_design] 
+![Predictive Horizontal Pod Autoscaler Experiment\label{phpa_long_phpa_diagram}](predictive-horizontal-pod-autoscaler/long/diagrams/PHPA_long_experiment_k8s_hpa_design.svg) 
 
-![K8s Horizontal Pod Autoscaler Experiment\label{phpa_long_hpa_diagram}][phpa_long_diagram_phpa_design] 
+![K8s Horizontal Pod Autoscaler Experiment\label{phpa_long_hpa_diagram}](predictive-horizontal-pod-autoscaler/long/diagrams/PHPA_long_experiment_k8s_hpa_design.svg) 
 
 The load applied will be the same for each autoscaler;
 
@@ -972,13 +1143,13 @@ The Predictive Horizontal Pod Autoscaler will also have the following
 configuration settings for tuning the Holt-Winters algorithm:
 
 - Model Holt-Winters
-  * Per Interval: `1` (Run every interval)
-  * Alpha: `0.1`
-  * Beta: `0.1`
-  * Gamma: `0.9`
-  * Season Length: `5760` (24 hours in 15 second intervals)
-  * Stored Seasons: `4` (store last 4 days data)
-  * Method: `additive`
+  - Per Interval: `1` (Run every interval)
+  - Alpha: `0.1`
+  - Beta: `0.1`
+  - Gamma: `0.9`
+  - Season Length: `5760` (24 hours in 15 second intervals)
+  - Stored Seasons: `4` (store last 4 days data)
+  - Method: `additive`
 
 ### Hypothesis
 
@@ -1035,23 +1206,23 @@ causing previous natural fluctuations in replica counts to be exaggerated. This
 fluctation due to tuning should be investigated closely if the PHPA was to be
 used in a production environment.  
 
-![Replica comparison\label{phpa_rep_compare}][phpa_long_replicas]
+![Replica comparison\label{phpa_rep_compare}](predictive-horizontal-pod-autoscaler/long/results/replica_compare.svg)
 
-![Average latency comparison\label{phpa_avg_compare}][phpa_long_avg_latency]
+![Average latency comparison\label{phpa_avg_compare}](predictive-horizontal-pod-autoscaler/long/results/avg_latency_compare.svg)
 
-![Average latency comparison for day 1\label{phpa_avg_compare_1}][phpa_long_avg_day_1_latency]
+![Average latency comparison for day 1\label{phpa_avg_compare_1}](predictive-horizontal-pod-autoscaler/long/results/avg_latency_day_1.svg)
 
-![Average latency comparison for day 2\label{phpa_avg_compare_2}][phpa_long_avg_day_2_latency]
+![Average latency comparison for day 2\label{phpa_avg_compare_2}](predictive-horizontal-pod-autoscaler/long/results/avg_latency_day_2.svg)
 
-![Average latency comparison for day 3\label{phpa_avg_compare_3}][phpa_long_avg_day_3_latency]
+![Average latency comparison for day 3\label{phpa_avg_compare_3}](predictive-horizontal-pod-autoscaler/long/results/avg_latency_day_3.svg)
 
-![Maximum latency comparison\label{phpa_max_compare}][phpa_long_max_latency]
+![Maximum latency comparison\label{phpa_max_compare}](predictive-horizontal-pod-autoscaler/long/results/max_latency_compare.svg)
 
-![Maximum latency comparison for day 1\label{phpa_max_compare_1}][phpa_long_max_day_1_latency]
+![Maximum latency comparison for day 1\label{phpa_max_compare_1}](predictive-horizontal-pod-autoscaler/long/results/max_latency_day_1.svg)
 
-![Maximum latency comparison for day 2\label{phpa_max_compare_2}][phpa_long_max_day_2_latency]
+![Maximum latency comparison for day 2\label{phpa_max_compare_2}](predictive-horizontal-pod-autoscaler/long/results/max_latency_day_2.svg)
 
-![Maximum latency comparison for day 3\label{phpa_max_compare_3}][phpa_long_max_day_3_latency]
+![Maximum latency comparison for day 3\label{phpa_max_compare_3}](predictive-horizontal-pod-autoscaler/long/results/max_latency_day_3.svg)
 
 ### Conclusion
 
@@ -1067,48 +1238,177 @@ being applied to and it should be backed with data to allow for better tuning
 and a more useful autoscaling solution; otherwise unwanted results such as
 erratic scaling behaviour may arise out of poor tuning decisions.
 
+The PHPA project is available here:
+[https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler](https://github.com/jthomperoo/predictive-horizontal-pod-autoscaler)
+
 ## Autoscaling based on Twitter activity
 
-### Overview
+An example of the flexibility of the CPAF is looking at a novel type of
+autoscaler that scales based on twitter activity, looking for certain characters
+in tweets with a specific hashtag. The autoscaler operates by counting the
+number of tweets that contain a thumbs up emoji and the number of tweets that
+contain a thumbs down emoji and sets the number of replicas to the difference
+between number of tweets containing thumbs up and thumbs down. 
 
-### Conclusion
+This type of autoscaler would not be possible with the K8s HPA, and would
+require a custom autoscaler to be created. This autoscaler exists as an example
+of a CPA, and is represented by a small codebase containing two python scripts,
+some YAML configuration and a Dockerfile. This level of conciseness would simply
+not be possible if implementing an autoscaler from scratch without using the
+CPAF.
 
-## Horizontal Pod Autoscaler (HPA) running as Custom Pod Autoscaler (CPA) comparison with Kubernetes HPA
+This example is available here:
+[https://github.com/jthomperoo/custom-pod-autoscaler/tree/master/example/scale-on-tweet](https://github.com/jthomperoo/custom-pod-autoscaler/tree/master/example/scale-on-tweet)
 
-### Overview
+## Horizontal Pod Autoscaler running as Custom Pod Autoscaler comparison with Kubernetes HPA
 
-### Conclusion
+To show that the CPAF does not limit developer control over autoscaling, and to
+provide a useful base project for other autoscalers, the HPA was reimplemented
+as a CPA. This reimplementation supports all configuration available to the K8s
+HPA, while having the additional benefit that this customisation can be done on
+a per HPA basis, rather than cluster wide. The K8s HPA configuration requires
+SSH access to the master node, making this configuration unavailable on managed
+K8s providers such as EKS or GKE - the HPA as a CPA allows configuration at
+deploy time without any requirement to SSH into the master node, allowing
+configuration on managed providers.
 
-## Meeting Requirements
+This project is available here:
+[https://github.com/jthomperoo/horizontal-pod-autoscaler](https://github.com/jthomperoo/horizontal-pod-autoscaler)
+
+## Game Server Scaling
+
+The Agones Fleet Autoscaler has been identified as a game server specific
+autoscalings solution. This autoscaler is a custom implementation by the Agones
+development team specific for the Agones framework. The autoscaler allows two
+types of autoscaling, webhook based and buffer based. The webhook autoscaling
+technique is similar to how the CPAF works, allowing custom user logic to define
+how the scaling behaviour works - with the key difference that the CPAF is
+generalised and works for all K8s clusters, rather than the Agones Fleet
+Autoscaler only working within Agones. The buffer autoscaling technique can be
+easily implemented through a CPA and the CPAF, for example with the use of a
+Python script. The buffer autoscaling again only works in Agones, but the CPAF
+would allow the autoscaler to work in any K8s environment and framework.
+
+## Delivery of Requirements
+
+### Must Have
+
+- [✓] Can deploy a Docker image with autoscaling application into a K8s cluster.
+  - [✓] Multiple distributed Docker images for various languages/environments.
+    - [✓] Python Docker image.
+    - [✓] Alpine Docker image.
+- [✓] Autoscaler repeatedly runs.
+- [✓] Supports user logic, can triggered through a shell command, allows
+  specification in any language/framework that supports being called through
+  shell commands.
+  - [✓] Supports HTTP requests from user logic.
+- [✓] If user logic specifies that the number of replicas should change, scaling
+  should occur and the number of pods should be adjusted.
+- [✓] \>= 70% Unit test coverage.
+- [✓] Can be deployed with K8s YAML.
+- [✓] K8s Custom Resource specifiying the Custom Pod Autoscaler to allow for
+  simpler and easier deployment/configuration.
+- [✓] Syntax validation for Custom Pod Autoscaler K8s YAML.
+- [✓] Deploying the K8s Custom Resource should provision all required K8s
+  resources for the autoscaler.
+- [✓] Can deliver configuration options through K8s YAML.
+- [✓] Can deliver configuration options through a supplied configuration file
+  baked into the autoscaler image.
+- [✓] Configuration options.
+  - [✓] How frequently the autoscaler runs.
+  - [✓] Minimum and Maximum replicas
+  - [✓] Which resource to target for scaling.
+  - [✓] Timeouts for metric and evaluation gathering.
+- [✓] Can delete the autoscaler.
+  - [✓] Deletes all associated K8s resources.
+
+### Should Have
+
+- [✓] *Cooldown* feature to avoid *thrashing*.
+- [ ] Allow choosing which pods to terminate when scaling down.
+- [✓] Manual triggering of the Custom Pod Autoscaler metric gathering and evaluation
+  through an API.
+  - [✓] Provide a *dry run* flag to the API to allow seeing how the autoscaler would
+    scale without applying the results.
+- [✓] Hooks for different actions/stages in the autoscaling process.
+    - [✓] Before metric gathering.
+    - [✓] After metric gathering.
+    - [✓] Before evaluation.
+    - [✓] After evaluation.
+    - [✓] Before scaling.
+    - [✓] After scaling.
+- [✓] Support scaling all resources the Horizontal Pod Autoscaler can scale.
+  - [✓] ReplicaSets.
+  - [✓] ReplicationControllers.
+  - [✓] StatefulSets.
+  - [✓] Deployments.
+- [ ] Methods for calling user logic.
+  - [ ] Can trigger user logic through an HTTP request, allowing logic to exist
+    outside of the autoscaling pod, or even outside of the cluster.
+- [✓] Metric gathering modes.
+  - [✓] Can run in a *per pod* autoscaling mode, which will run metric gathering
+    for each pod the targeted resource manages.
+  - [✓] Can run in a *per resource* autoscaling mode, which will run metric
+    gathering only once for the targeted resource.
+- [✓] Full customisation of K8s resources, allowing Custom Pod Autoscalers to define
+  their own resource dependencies.
+  - [✓] When this customised resource is provided, the Custom Pod Autoscaler
+    should have ownership; meaning if the autoscaler is deleted the resource is
+    deleted.
+- [ ] Custom Pod Autoscaler GUI.
+- [✓] Implemented Custom Pod Autoscalers.
+  - [✓] Horizontal Pod Autoscaler; reimplemented as a Custom Pod Autoscaler.
+  - [✓] Predictive Horizontal Pod Autoscaler; Horizontal Pod Autoscaler extended
+    with statistical prediction techniques.
+  - [✓] Load Testing Pod Autoscaler; autoscaler allowing scaling based on realtime
+    load tested data.
+  - [✓] Examples to help developers.
+    - [✓] Autoscaler written in Python.
+    - [✓] Autoscaler written in Golang.
+    - [✓] Autoscaler that scales based on Twitter activity.
+
+### Undelivered Requirements
+
+- Allow choosing which pods to terminate when scaling down.
+
+This requirement was not met, as the K8s scaling API does not support this.
+Implementations that did not use the K8s scaling API were brittle and prone to
+version changes. There is currently an open issue for this feature on the K8s
+GitHub repository [@k8s_specific_downscale].
+
+- Can trigger user logic through an HTTP request, allowing logic to exist
+  outside of the autoscaling pod, or even outside of the cluster.  
+
+This requirement was not met at time of submission due to time constraints, but
+there are plans for a future release to support this.
+
+- Custom Pod Autoscaler GUI.
+
+This requirement was not met as it was decided that this would not be a useful
+tool, it's use would be very limited and any usecase would be covered easily by
+the CPAB HTTP REST API.
+
+### Delivered Requirements
+
+The vast majority of requirements were met, with the CPAF meeting all of the
+*must have* requirements set out in the requirements section - while meeting
+most of the *should have* requirements. 
 
 \newpage
 
 # Conclusion
 
-\newpage
+The CPAF is a useful framework and tooling set, allowing easy and fast
+development of custom autoscalers for Kubernetes. The CPAF directly addresses
+the problems identified, allowing full customisation of autoscaler logic in a
+less complex fashion. The CPAF is completely flexible, supporting a wide
+variety of languages, environment and frameworks. The entire HPA can be
+reimplemented as a CPA using the CPAF, displaying that there is no reduction in
+control or customisation when using the CPAF. The open source nature of the CPAF
+allows it to mature as a toolset, with the possiblity of third party developers
+and users using and maintaining the CPAF - giving some guarantee to the
+longevity of the project. This project has achieved the aims and goals it was
+created for, addressing the problems with a novel approach that gives complete
+control to developers and cluster administrators.
 
-[design_cpaf_overview]: assets/design/cpaf.svg
-[design_cpab_architecture]: assets/design/cpab_architecture.svg
-[design_autoscaler_overview]: assets/design/autoscaler_overview.svg
-[phpa_long_diagram_hpa_design]:
-predictive-horizontal-pod-autoscaler/long/diagrams/PHPA_long_experiment_k8s_hpa_design.svg
-[phpa_long_diagram_phpa_design]:
-predictive-horizontal-pod-autoscaler/long/diagrams/PHPA_long_experiment_k8s_hpa_design.svg
-[phpa_long_replicas]:
-predictive-horizontal-pod-autoscaler/long/results/replica_compare.svg
-[phpa_long_avg_latency]:
-predictive-horizontal-pod-autoscaler/long/results/avg_latency_compare.svg
-[phpa_long_avg_day_1_latency]:
-predictive-horizontal-pod-autoscaler/long/results/avg_latency_day_1.svg
-[phpa_long_avg_day_2_latency]:
-predictive-horizontal-pod-autoscaler/long/results/avg_latency_day_2.svg
-[phpa_long_avg_day_3_latency]:
-predictive-horizontal-pod-autoscaler/long/results/avg_latency_day_3.svg
-[phpa_long_max_latency]:
-predictive-horizontal-pod-autoscaler/long/results/max_latency_compare.svg
-[phpa_long_max_day_1_latency]:
-predictive-horizontal-pod-autoscaler/long/results/max_latency_day_1.svg
-[phpa_long_max_day_2_latency]:
-predictive-horizontal-pod-autoscaler/long/results/max_latency_day_2.svg
-[phpa_long_max_day_3_latency]:
-predictive-horizontal-pod-autoscaler/long/results/max_latency_day_3.svg
+\newpage
