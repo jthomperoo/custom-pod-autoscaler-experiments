@@ -957,17 +957,99 @@ The CPAB has unit test coverage of 95%.
 
 #### Autoscaler with Failing User Defined Logic
 
+This tests that the CPAB will handle failing UDL.
+
+1. Create a CPA Docker image pointing at a Python script that will exit with a
+   non-zero exit code.
+2. Deploy the CPAO to the cluster.
+3. Deploy the CPA to the cluster, alongside an application to manage.
+4. Use `kubectl logs --follow <CPA_NAME>` to view the logs of the CPA.
+5. Check that an appropriate error is logged, and the CPA itself does not
+   crash/scale the resource being managed.
+
 #### Autoscaler running in Per Resource Mode
+
+This tests that the CPAB handles per resource mode correctly.
+
+1. Deploy the CPAO to the cluster.
+2. Deploy a modified `python-custom-autoscaler` example CPA, alongside the
+   example `paulbouwer/hello-kubernetes:1.5` application to manage.
+3. Use `kubectl exec -it python-custom-autoscaler` to gain shell access to the
+   autoscaler container.
+4. Ensure that the managed application is scaled to the `numPods` label provided
+   in the `paulbouwer/hello-kubernetes:1.5` deployment YAML. Redeploy after
+   changing this label value and ensure that the number of replicas is adjusted.
 
 #### Autoscaler running in Per Pod Mode
 
+This tests that the CPAB handles per pod mode correctly.
+
+1. Deploy the CPAO to the cluster.
+2. Deploy the `simple-pod-metrics-python` example CPA to the cluster, alongside
+   the example `flask-metric` application to manage.
+3. Use `kubectl logs --follow simple-pod-metrics-python` to view the logs of the CPA.
+4. Use `kubectl exec -it <APPLICATION_POD_NAME>`, use `increment` and
+   `decrement` commands inside the Docker container to adjust the Pod metrics.
+5. Ensure that if the total available metric across all Pods being managed goes
+   below 1 a new Pod is requested.
+6. Ensure that if the total available metric accross all Pods being managed goes
+   above 5 a Pod is terminated.
+
 #### Autoscaler with API disabled
+
+This tests that the CPAB disables the API if requested.
+
+1. Deploy the CPAO to the cluster.
+2. Deploy a modified `python-custom-autoscaler` example CPA, with the API enabled option
+   set to false, to the cluster, alongside the example
+   `paulbouwer/hello-kubernetes:1.5` application to manage.
+3. Use `kubectl exec -it python-custom-autoscaler` to gain shell access to the
+   autoscaler container.
+4. Use the command `curl -X GET http://localhost:5000/api/v1/metrics`.
+5. Ensure the response of this command is not successful, and a failed to
+   connect error is displayed.
 
 #### Autoscaler with HTTPS API
 
+This tests the CPAB will host the API using correct SSL certificates if
+provided.
+
+1. Deploy the CPAO to the cluster.
+2. Generate an SSL certificate and private key file.
+3. Bundle these SSL certificates into a CPA Docker image, update configuration
+   for HTTPS to point to the certificate and private key filepaths.
+4. Deploy the CPA to the cluster.
+5. Use `kubectl exec -it <CPA_POD_NAME>` to gain shell access to the autoscaler.
+6. Use the command `curl -X GET http://localhost:5000/api/v1/metrics`.
+7. Ensure the response of this command is not successful, and a failed to
+   connect error is displayed.
+8. Use the command `curl -k -X GET https://localhost:5000/api/v1/metrics`.
+9. Ensure that there is a valid response from the server, with a `200 OK`
+   message.
+
 #### Autoscaler with No Configuration Provided
 
+This tests the CPAB will provide an error and not run if no configuration is
+provided.
+
+1. Deploy the CPAO to the cluster.
+2. Deploy an autoscaler with no configuration YAML file.
+3. Check that the Pod is in state `Error`.
+4. Use `kubectl logs <CPA_POD_NAME>` to see the error logs.
+5. Ensure that the following error is logged: `Fail to read configuration file /config.yaml`.
+
 #### Autoscaler Starting at a Full Minute
+
+This tests that the CPAB will start its scheduled autoscaling at the correct
+time, as specified by the `startTime` configuration option.
+
+1. Deploy the CPAO to the cluster.
+2. Deploy an autoscaler on a 30 second mark (for example 15:32:30, 17:32:30)
+   with `startTime` configured as set to `60000`.
+3. Check that the Pod is in state `Running`.
+4. Use `kubectl logs <CPA_POD_NAME>` to see the logs.
+5. Ensure that the logs report that the autoscaler is waiting ~30 seconds before
+   starting to autoscale, starting to autoscaling only on the full minute.
 
 ## Custom Pod Autoscaler Operator
 
