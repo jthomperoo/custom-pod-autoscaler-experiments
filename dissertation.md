@@ -67,9 +67,9 @@ requires an intimate understanding of K8s and its APIs.
 
 Custom metrics requires the use of third party adapters (e.g. Prometheus, Sysdig
 Monitor), or requires the user to write their own adapter. This requires a lot
-of configuration, and in the case of writing their own adapter requires in-depth
+of configuration and in the case of writing their own adapter requires in-depth
 K8s API knowledge. See figure \ref{sysdig_scaler_overview} for an example Sysdig
-autoscaling system, and figure \ref{general_custom_metrics} for a generalised
+autoscaling system and figure \ref{general_custom_metrics} for a generalised
 system.
 
 ![Sysdig Custom Metrics autoscaling overview\label{sysdig_scaler_overview}
@@ -150,7 +150,7 @@ other metrics such as CPU usage or memory, which would not make sense for a game
 server.
 
 The webhook driven autoscaling works by allowing users to deploy a web server to
-respond to webhooks, and configuring the autoscaler to send HTTPS requests to
+respond to webhooks and configuring the autoscaler to send HTTPS requests to
 this web server to determine how to scale. The web server responds with a
 standard response on how to scale the resource
 [@agones_autoscaler_specification].
@@ -159,7 +159,7 @@ The Agones Fleet Autoscaler addresses many of the issues highlighted - providing
 n alternative to the hard-coded autoscaling algorithm of the HPA through the
 buffer and webhook driven autoscaling techniques. The webhook method provides
 the ability to inject custom user written logic, exposed through an HTTP API.
-This would allow a developer to create custom autoscaling, and allow a cluster
+This would allow a developer to create custom autoscaling and allow a cluster
 administrator to apply different scaling techniques.
 
 The drawback of the Agones Fleet Autoscaler is that it is only available as part
@@ -167,7 +167,7 @@ of the Agones ecosystem. The autoscaler is not generalised and requires the use
 of Agones abstractions such as *fleets*, which prevent it from being deployed on
 a standard K8s cluster. If a user wanted to utilise this autoscaling technique,
 they would be required to use the entire Agones framework - which is built
-exclusively for game server hosting, and as such is not applicable to most
+exclusively for game server hosting and as such is not applicable to most
 scenarios.
 
 \newpage
@@ -178,11 +178,12 @@ The Custom Pod Autoscaler Framework (CPAF) is designed to address these two
 problems. The CPAF would work by allowing the creation of Custom Pod 
 Autoscalers (CPA) and letting them run inside a K8s cluster.  
 
-The CPA would contain custom user defined logic for scaling, alongside a base 
+A CPA would contain custom User Defined Logic (UDL) for scaling, alongside a base 
 program to handle interactions with K8s and triggering the user defined 
 logic. The CPA would allow for very simple scaling code to be written, in a 
 variety of languages and with different technologies, while hiding the 
-complexities of K8s.
+complexities of K8s. All core scaling logic would be handled by UDL, while
+complexities such as K8s API interaction would be hidden by the base program.
 
 ## Customisation
 
@@ -207,25 +208,27 @@ whilst also allowing users of the autoscaler to customise it to their needs.
 
 ## Ease of Use
 
-Both creating a CPA and deploying it should be easy, and not require lots of 
+Both creating a CPA and deploying it should be easy and not require lots of 
 configuration, third party deployments or intricate K8s API knowledge.
 
 ### Creating a Custom Pod Autoscaler
 
 CPAs should be extremely flexible in how they are created, supporting a wide 
-variety of languages, frameworks, environments, and interfaces.
+variety of languages, frameworks, environments, and interfaces. The CPAF should
+provide a variety of ways to integrate UDL, through shell commands, HTTP
+commands, future methods should be able to be added without breaking changes.
 
 ### Deploying a Custom Pod Autoscaler
 
 CPAs should be deployed in the standard way to deploy to K8s, through 
-K8s deployment YAML. This is flexible, and also has the benefit of 
+K8s deployment YAML. This is flexible and also has the benefit of 
 including compatiblity with some other commonly used tools, such as Helm.  
 
 Deploying through K8s YAML provides the benefit of familiarity and 
 consistency with other parts of K8s; whilst also allowing more 
-transparancy in versioning, resources used, and deploy time customisation.  
+transparancy in versioning, resources used and deploy time customisation.  
 
-The deployment YAML should be as simple as possible, and without obscure or 
+The deployment YAML should be as simple as possible and without obscure or 
 confusing resources included; much of the complexity should be abstracted away 
 from the deploying user, whilst also retaining a level of customisation at 
 deploy time. This could be achieved with a custom K8s resource and some 
@@ -281,7 +284,7 @@ triggering autoscaling.
     boundary/threshold.
   - Cooldown would allow defining a time period to gather metrics in and scale
     the highest value in that window. This would ensure that downscaling did not
-    happen too quickly or erratically, and help smooth out the number of
+    happen too quickly or erratically and help smooth out the number of
     replicas over time.
 - Allow choosing which pods to terminate when scaling down.
   - The CPA evaluator could decide which pods to terminate when scaling down,
@@ -438,7 +441,7 @@ The Metric Gatherer is the subsystem of the CPAB responsible for reaching out to
 the UDL to gather metrics. The Metric Gatherer takes input information about the
 resource being managed and then feeds this into the UDL responsible for metric
 gathering configured by the developer of the CPA. The Metric Gatherer then
-parses the output from the UDL, catches any errors, and then returns the metrics
+parses the output from the UDL, catches any errors and then returns the metrics
 retrieved from the UDL for other subsystems to use to make scaling decisions or
 expose data through the CPAB API.
 
@@ -449,7 +452,7 @@ make decisions on how to scale the resource being managed. The Evaluator takes
 as input metrics that have been gathered by the Metric Gatherer; and then feeds
 this into the UDL responsible for evaluating metrics configured by the developer
 of the CPA. The Evaluator then parses the output from the UDL, catches any
-errors, and then returns evaluations retrieved from the UDL.
+errors and then returns evaluations retrieved from the UDL.
 
 #### Autoscaler
 
@@ -459,7 +462,7 @@ subsystems to automatically scale the resource at a defined interval.
 
 The Autoscaler is the full automatic scaling pipeline, which operates repeatedly
 on a configured schedule. The Autoscaler first calls the Metric Gatherer to
-retrieve metrics, and then feeds these metrics into the Evaluator to retrieve an
+retrieve metrics and then feeds these metrics into the Evaluator to retrieve an
 evaluation, before finally sending this evaluation to the Scaler to scale the
 resource through the K8s API. See figure \ref{autoscaler_overview} for an
 overview of the autoscaler's flow.  
@@ -480,7 +483,7 @@ evaluation correctly and without errors.
 
 The CPAB exposes a HTTP REST API for runtime interactions with the CPA. The API
 allows triggering the autoscaler through a HTTP request, retrieving metrics
-without evaluating, and retrieving evaluations without scaling as part of a dry
+without evaluating and retrieving evaluations without scaling as part of a dry
 run.  
 
 This API allows the CPAB to be controlled externally, either through an
@@ -544,7 +547,7 @@ The following options are be configurable:
 
 UDL is accessed and triggered through an abstraction called *Methods*, which are
 configurable ways to call and interact with User Defined Logic. A *Method* is
-specified in configuration, and this abstraction allows for different ways of
+specified in configuration and this abstraction allows for different ways of
 interacting with UDL to be available; while also allowing future additions of
 new ways to interact in a non-breaking and consistent way.  
 
@@ -580,7 +583,7 @@ The Shell Method is specified by providing the following:
 #### HTTP Method
 
 The HTTP Method allows interaction through HTTP calls. This allows developers to
-expose an API for the CPAB to call, and their UDL could run anywhere - within
+expose an API for the CPAB to call and their UDL could run anywhere - within
 the CPA Pod, another Pod in the K8s cluster, or even outside of the
 K8s cluster. The only requirement for this is that it must expose HTTP
 endpoints that can recieve and respond to HTTP calls.  
@@ -720,7 +723,7 @@ libraries that provide no interfaces.
 
 One of the key benefits of building the application in Go and distributing it as
 an open source codebase is that other applications can use the Custom Pod
-Autoscaler source code as a library import, and directly use Custom Pod
+Autoscaler source code as a library import and directly use Custom Pod
 Autoscaler structs, methods and interfaces.  
 
 This project has been developed with this understanding that the application
@@ -744,7 +747,7 @@ Go is extensively used in the K8s ecoystem, with the K8s main project itself
 written in Go, alongside a number of major libraries such as Helm, the Operator
 Framework and Prometheus integrations. The widespread use of Go in the K8s
 ecosystem has led to a strong community of Go developers, with a large amount of
-documentation, tooling, and support. The K8s API provides direct support for Go
+documentation, tooling and support. The K8s API provides direct support for Go
 with the distribution of the `k8s.io/client-go` API client, providing a standard
 toolset for interacting with the K8s API.
 
@@ -776,7 +779,7 @@ any time. The public API SHOULD NOT be considered stable.' [@semantic_versioning
 Both the CPAB and CPAO have changes tracked through a changelog, which documents
 all changes between versions. The changelog is formatted according to the 'Keep
 a Changelog' changelog style. The maintenance of this changelog allows users to
-see changes between versions, and make informed decisions on upgrading - while
+see changes between versions and make informed decisions on upgrading - while
 also providing a utility for developers for tracking changes between versions.
 
 > What is a changelog?
@@ -833,8 +836,8 @@ releasable codebase at all times.
 
 The following Go libraries were used to develop the Custom Pod Autoscaler Base:
 
-- `golang/glog` - Leveled logging for Golang, allowing different verbosity 
-levels, and severity levels (`Info`, `Warning`, `Error`, and `Fatal`).
+- `golang/glog` - Leveled logging for Golang, allowing different verbosity
+  levels and severity levels (`Info`, `Warning`, `Error`, and `Fatal`). 
 - `k8s.io/client-go`, `k8s.io/api`, and `k8s.io/apimachinery` - K8s API
   client and structures for Golang, allowing interaction with the K8s
   API. 
@@ -964,7 +967,7 @@ This tests that the CPAB will handle failing UDL.
 2. Deploy the CPAO to the cluster.
 3. Deploy the CPA to the cluster, alongside an application to manage.
 4. Use `kubectl logs --follow <CPA_NAME>` to view the logs of the CPA.
-5. Check that an appropriate error is logged, and the CPA itself does not
+5. Check that an appropriate error is logged and the CPA itself does not
    crash/scale the resource being managed.
 
 #### Autoscaler running in Per Resource Mode
@@ -1006,7 +1009,7 @@ This tests that the CPAB disables the API if requested.
 3. Use `kubectl exec -it python-custom-autoscaler` to gain shell access to the
    autoscaler container.
 4. Use the command `curl -X GET http://localhost:5000/api/v1/metrics`.
-5. Ensure the response of this command is not successful, and a failed to
+5. Ensure the response of this command is not successful and a failed to
    connect error is displayed.
 
 #### Autoscaler with HTTPS API
@@ -1021,7 +1024,7 @@ provided.
 4. Deploy the CPA to the cluster.
 5. Use `kubectl exec -it <CPA_POD_NAME>` to gain shell access to the autoscaler.
 6. Use the command `curl -X GET http://localhost:5000/api/v1/metrics`.
-7. Ensure the response of this command is not successful, and a failed to
+7. Ensure the response of this command is not successful and a failed to
    connect error is displayed.
 8. Use the command `curl -k -X GET https://localhost:5000/api/v1/metrics`.
 9. Ensure that there is a valid response from the server, with a `200 OK`
@@ -1071,11 +1074,11 @@ kubectl config set-context --current --namespace=${NAMESPACE}
 curl -L "https://github.com/jthomperoo/custom-pod-autoscaler-operator/releases/download/${VERSION}/namespace.tar.gz" | tar xvz --to-command 'kubectl apply -f -'
 ```
 2. Ensure the following resources exist in the namespace provided.
-  - A Deployment called ``.
-  - A Pod called ``.
-  - A Service Account called ``.
-  - A Role called ``.
-  - A RoleBinding called ``.
+  - A Deployment called `custom-pod-autoscaler-operator`.
+  - A Pod called `custom-pod-autoscaler-operator`.
+  - A Service Account called `custom-pod-autoscaler-operator`.
+  - A Role called `custom-pod-autoscaler-operator`.
+  - A RoleBinding called `custom-pod-autoscaler-operator`.
 
 3. Ensure the Pod is running.
 
@@ -1089,16 +1092,16 @@ VERSION=<INSERT_VERSION_HERE>
 curl -L "https://github.com/jthomperoo/custom-pod-autoscaler-operator/releases/download/${VERSION}/cluster.tar.gz" | tar xvz --to-command 'kubectl apply -f -'
 ```
 2. Ensure the following resources exist in the default namespace.
-  - A Deployment called ``.
-  - A Pod called ``.
-  - A Service Account called ``.
-  - A ClusterRole called ``.
-  - A ClusterRoleBinding called ``.
+  - A Deployment called `custom-pod-autoscaler-operator`.
+  - A Pod called `custom-pod-autoscaler-operator`.
+  - A Service Account called `custom-pod-autoscaler-operator`.
+  - A ClusterRole called `custom-pod-autoscaler-operator`.
+  - A ClusterRoleBinding called `custom-pod-autoscaler-operator`.
 3. Ensure the Pod is running.
 
 #### Deploy and Delete a Custom Pod Autoscaler
 
-This tests that a running CPA can be deployed, resources are created, and then
+This tests that a running CPA can be deployed, resources are created and then
 deleted and all resources deleted by the CPAO.
 
 1. Install either the cluster wide or namespace wide operator on a cluster.
@@ -1130,9 +1133,9 @@ series of checks are executed through GitHub Actions:
 
 This automatic process ensures that any code that is in the main branch of
 either project has been linted, tested and can be built without errors. Building
-and publishing as part of this CI process allows for reproducible, versioned builds, and
-addresses issues of trust for distributables as all artifacts are built on the
-CI server rather than on a personal computer.
+and publishing as part of this CI process allows for reproducible, versioned
+builds and addresses issues of trust for distributables as all artifacts are
+built on the CI server rather than on a personal computer.
 
 ## Codecov
 
@@ -1238,7 +1241,7 @@ configuration settings for tuning the Holt-Winters algorithm:
 The Predictive Horizontal Pod Autoscaler using the Holt-Winters prediction
 method will pre-emptively scale compared to the standard K8s Horizontal
 Pod Autoscaler which will only retroactively react. This will be manifested in
-higher replica counts when scaling up, and scaling up earlier; with the result
+higher replica counts when scaling up and scaling up earlier; with the result
 of lower average and maximum latency, and less failed requests - primarily
 around the moment of change from lower load levels to high load. This effect
 will only be apparant after at least one full season (24 hours); for the
@@ -1344,7 +1347,7 @@ This example is available here:
 
 ## Horizontal Pod Autoscaler running as Custom Pod Autoscaler comparison with Kubernetes HPA
 
-To show that the CPAF does not limit developer control over autoscaling, and to
+To show that the CPAF does not limit developer control over autoscaling and to
 provide a useful base project for other autoscalers, the HPA was reimplemented
 as a CPA. This reimplementation supports all configuration available to the K8s
 HPA, while having the additional benefit that this customisation can be done on
