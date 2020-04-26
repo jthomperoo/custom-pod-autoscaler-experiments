@@ -1086,3 +1086,82 @@ Example use case from GitHub issues.
 
 \includegraphics[width=1.0\textwidth]{assets/evaluation/gh_usecase.png}
 \newpage
+
+\subsection*{Appendix I}
+
+Concurrent autoscaling using Goroutine.
+
+\begin{lstlisting}
+glog.V(0).Infof("Waiting %d milliseconds before starting autoscaler\n", delayTime)
+
+// Set up shutdown channel, which will listen for UNIX shutdown commands
+shutdown := make(chan os.Signal, 1)
+signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+go func() {
+  // Wait for delay to start at expected time
+  <-delayStartTimer.C
+  glog.V(0).Infoln("Starting autoscaler")
+  // Set up time ticker with configured interval
+  ticker := time.NewTicker(time.Duration(config.Interval) * time.Millisecond)
+
+  // Set up scaler
+  autoscaler := &autoscaler.Scaler{
+    Client:          resourceClient,
+    Config:          config,
+    GetMetricer:     metricGatherer,
+    GetEvaluationer: evaluator,
+    Scaler:          scaler,
+  }
+
+  // Run the scaler in a goroutine, triggered by the ticker
+  // listen for shutdown requests, once received shut down the autoscaler
+  // and the API
+  go func() {
+    for {
+      select {
+      case <-shutdown:
+        glog.V(0).Infoln("Shutting down...")
+        // Stop API
+        ctx, cancel := context.WithCancel(context.Background())
+        defer cancel()
+        srv.Shutdown(ctx)
+        // Stop autoscaler
+        ticker.Stop()
+        return
+      case <-ticker.C:
+        glog.V(2).Infoln("Running autoscaler")
+        err := autoscaler.Scale()
+        if err != nil {
+          glog.Errorln(err)
+        }
+      }
+    }
+  }()
+}()
+\end{lstlisting}
+\newpage
+
+\subsection*{Appendix J}
+
+Custom Pod Autoscaler go.mod file.
+
+\begin{lstlisting}
+module github.com/jthomperoo/custom-pod-autoscaler
+
+go 1.13
+
+require (
+	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
+	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/google/go-cmp v0.3.1
+	github.com/googleapis/gnostic v0.3.1 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	k8s.io/api v0.17.0
+	k8s.io/apimachinery v0.17.0
+	k8s.io/client-go v0.17.0
+)
+\end{lstlisting}
+\newpage

@@ -779,7 +779,7 @@ multicore CPUs argued that a language should provide first-class support for
 some sort of concurrency or parallelism...' [@golang_faq] - which is useful in
 this project for building a scalable HTTP REST API, alongside providing a
 non-blocking concurrency solution for repeatedly running a timed autoscaler
-alongside the API. 
+alongside the API [Appendix I]. 
 
 In other languages when attempting to build applications that utilise some form
 of concurrency I have found real complexity and difficulty in achieving this.
@@ -836,12 +836,12 @@ stateless as possible.
 ### Go Modules
 
 The version of Go used provides the *Go Modules* feature, with complete Golang
-dependencies described by a Go module file `go.mod` and a checksum file
-`go.sum`. This allows completely reproducible builds, while also providing ease
-of use for developers, as they can add, remove and update dependencies through
-the Go command line program. This go module feature allows a new developer to
-join the project and retrieve all dependencies easily and reliably - reducing
-set up time and difficulty.
+dependencies described by a Go module file `go.mod` [Appendix J] and a checksum
+file `go.sum`. This allows completely reproducible builds, while also providing
+ease of use for developers, as they can add, remove and update dependencies
+through the Go command line program. This go module feature allows a new
+developer to join the project and retrieve all dependencies easily and reliably
+- reducing set up time and difficulty.
 
 Initial development of this project was done using the older Go style of
 development in the *Go Path*, with no project level dependency management.
