@@ -1,0 +1,101 @@
+\makeatletter
+\newcommand{\listintertext}{\@ifstar\listintertext@\listintertext@@}
+\newcommand{\listintertext@}[1]{% \listintertext*{#1}
+  \hspace*{-\@totalleftmargin}#1}
+\newcommand{\listintertext@@}[1]{% \listintertext{#1}
+  \hspace{-\leftmargin}#1}
+\makeatother
+
+\begin{center}
+\section*{\centering SCHOOL OF ELECTRONICS, ELECTRICAL ENGINEERING and COMPUTER SCIENCE}
+
+\subsection*{\centering CSC3002 – COMPUTER SCIENCE PROJECT}
+
+\subsubsection*{\centering Dissertation Cover Sheet}
+
+A signed and completed cover sheet must accompany the submission of the Software
+Engineering dissertation submitted for assessment.
+
+
+Work submitted without a cover sheet will NOT be marked.  
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+Student Name:  & Jamie Thompson    & Student Number:   & 40178456   \\ \hline
+Project Title: & \multicolumn{3}{l|}{Kubernetes Custom Autoscaling} \\ \hline
+Supervisor     & \multicolumn{3}{l|}{Dr. David Cutting}             \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection*{\centering Declaration of Academic Integrity}
+
+\end{center}
+
+Before submitting your dissertation please check that the submission:
+
+\begin{enumerate}
+    \item Has a full bibliography attached laid out according to the guidelines
+    specified in the Student Project Handbook
+    \item Contains full acknowledgement of all secondary sources used (paper-based and electronic)
+    \item Does not exceed the specified page limit
+    \item Is clearly presented and proof-read
+    \item Is submitted on, or before, the specified or agreed due date. Late
+    submissions will only be accepted in exceptional circumstances or where a
+    deferment has been granted in advance.
+\end{enumerate}
+
+\textbf{
+By submitting your dissertation you declare that you have completed the tutorial
+on plagiarism at \url{http://www.qub.ac.uk/cite2write/introduction5.html} and
+are aware that it is an academic offence to plagiarise.  You declare that the
+submission is your own original work. No part of it has been submitted for any
+other assignment and you have acknowledged all written and electronic sources
+used.}
+
+\begin{enumerate}
+    \setcounter{enumi}{5}
+    \item If selected as an exemplar, I agree to allow my dissertation to be
+    used as a sample for future students. (Please delete this if you do not
+    agree.)
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+Student's Signature & Jamie Thompson & Date of Submission & 24/04/2020 \\ \hline
+\end{tabular}
+\end{table}
+
+\newpage
+
+\section*{Acknowledgements}
+
+Making this project has taken a lot of time and work, I want to thank my
+supervisor Dr David Cutting for giving great guidance, and helping to push this
+project in an interesting direction. His constant assistance and ability to
+create opportunities for industry networking have been much appreciated.  
+
+I am extremely appreciative of the support and encouragement from my family; my
+parents Dawn and Ken, my brothers Justin and Scott and my sister Nadia, who all
+helped push me along so I could finish this. 
+
+\newpage
+
+\section*{Abstract}
+
+Kubernetes autoscaling is limited by lack of customisation for the standard
+autoscaler; the Horizontal Pod Autoscaler, and by the difficulty in creating a
+customised autoscaler. A custom autoscaler requires an in-depth understanding of
+the Kubernetes API and Kubernetes Pod Lifecycle - complex mechanics and
+standards that are not directly relevant to autoscaling logic.
+
+This project aims to create a framework to address both of these issues by
+facilitating a more simple approach to creating custom autoscalers - abstracting
+complexity without ceding control or flexiblity. This simplification is with the
+ultimate goal of allowing developers to create, deploy and share autoscalers
+with limited Kubernetes API experience.
+
+\newpage
