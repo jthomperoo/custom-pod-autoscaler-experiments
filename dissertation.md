@@ -1875,8 +1875,8 @@ The CPAF is a successful project, with the utility of the CPAF not only
 evidenced by these key criteria, but also by the fact that the Predictive
 Horizontal Pod Autoscaler has seen popularity in user interest and adoption. The
 PHPA's efficacy is demonstrated by experimental results, which demonstrably
-reveal how the PHPA can provide a better scaling solution than the K8s native
-HPA under specific conditions and with appropriate usage.
+reveal how the PHPA can be applied in the same manner as the HPA and achieve
+better results when appropriately configured and applied.
 
 The CPAF will continue to be developed, with future releases planned with
 features such as HTTP method support, supporting scaling to and from zero,
@@ -1897,7 +1897,7 @@ Go, the Operator Framework, and general software engineering practices.
 Developing this framework has been an enjoyable experience, helping me to learn
 new languages, frameworks, and concepts - while also broadening my ability to
 communicate with others; through public speaking at The Virtual Bash, or with
-unknown developers through the GitHub issues of the project. The CPAF has been a
+remote developers through the GitHub issues of the project. The CPAF has been a
 success in terms of delivering a system that works and is useful, while also
 being successful in teaching me important skills in software engineering and
 communication.
