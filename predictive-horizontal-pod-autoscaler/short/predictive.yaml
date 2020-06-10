@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
       - name: predictive-autoscaler
-        image: jthomperoo/predictive-horizontal-pod-autoscaler:v0.3.0
+        image: jthomperoo/predictive-horizontal-pod-autoscaler:v0.5.0
         imagePullPolicy: IfNotPresent
   scaleTargetRef:
     apiVersion: apps/v1
