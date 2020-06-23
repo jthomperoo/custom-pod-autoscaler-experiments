@@ -66,7 +66,7 @@ def experiment(host, yaml_path, target):
         
         locust_settings = invokust.create_settings(
             locustfile=LOCUST_FILE,
-            host=f"https://{host}/api/v1/namespaces/default/services/{target}/proxy/",
+            host=f"http://{host}/api/v1/namespaces/default/services/{target}/proxy/",
             num_clients=num_clients,
             hatch_rate=hatch_rate,
             run_time=LOCUST_RUN_TIME

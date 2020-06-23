@@ -21,9 +21,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class UserBehavior(TaskSet):
     @task(1)
     def profile(self):
-        auth_user = os.environ.get("AUTH_USER")
-        auth_pass = os.environ.get("AUTH_PASS")
-        response = self.client.get("/", auth=(auth_user, auth_pass), verify=False)
+        response = self.client.get("/")
 
 class WebsiteUser(HttpLocust):
     task_set = UserBehavior

@@ -23,13 +23,25 @@ To install the pip dependencies use:
 python -m pip install -r requirements.txt
 ```
 
+### Set up the Kubectl proxy
+
+This experiment requires a kubectl proxy before it can run, which can be set up
+with the following command:
+
+```
+kubectl proxy
+```
+
 ### Running the script
 
 The experiment is run by using the following command:
 
 ```
-AUTH_USER="USERNAME FOR AUTHENTICATING AGAINST THE CLUSTER API" AUTH_PASS="PASSWORD FOR AUTHENTICATING AGAINST THE CLUSTER API" python experiment.py IP_OF_THE_CLUSTER_API:PORT_OF_THE_CLUSTER_API
+python experiment.py 127.0.0.1:8001
 ```
+
+Replace `127.0.0.1:8001` with whichever host:port combination your proxy is set
+up with.
 
 Once the experiment is complete the results are collected and written to `results/results.json`.
 
